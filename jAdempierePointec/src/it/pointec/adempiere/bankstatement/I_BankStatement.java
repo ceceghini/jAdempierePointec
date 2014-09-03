@@ -1,8 +1,7 @@
 package it.pointec.adempiere.bankstatement;
 
-import it.adempiere.pointec.util.Ini;
-import it.adempiere.pointec.util.Util;
-import it.pointec.adempiere.prova123;
+import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 import java.io.File;
 import java.sql.Date;
@@ -15,6 +14,7 @@ import org.compiere.model.MPInstance;
 import org.compiere.model.MPInstancePara;
 import org.compiere.model.MProcess;
 import org.compiere.process.ProcessInfo;
+import org.compiere.process.ImportBankStatement2;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
@@ -85,7 +85,7 @@ public class I_BankStatement {
 	        para30.setParameter("C_BankAccount_ID", _source.get_c_bankaccount_id());
 	        para30.saveEx();
 	        
-	        prova123 process = new prova123();
+	        ImportBankStatement2 process = new ImportBankStatement2();
 	        
 	        process.startProcess(Env.getCtx(), pi, Trx.get(trxName, false));     
 	

@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 
-import it.adempiere.pointec.util.Ini;
 import it.pointec.adempiere.converter.IntConverter;
+import it.pointec.adempiere.util.Ini;
 
 public class Product {
 

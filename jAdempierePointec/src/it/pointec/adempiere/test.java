@@ -1,8 +1,8 @@
 package it.pointec.adempiere;
 
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.bankstatement.IWBank;
 import it.pointec.adempiere.bankstatement.I_BankStatement;
+import it.pointec.adempiere.util.Util;
 
 public class test {
 

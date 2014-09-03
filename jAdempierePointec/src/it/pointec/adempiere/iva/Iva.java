@@ -4,9 +4,9 @@ import java.sql.PreparedStatement;
 
 import org.compiere.util.DB;
 
-import it.adempiere.pointec.util.Ini;
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.Adempiere;
+import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 public class Iva {
 

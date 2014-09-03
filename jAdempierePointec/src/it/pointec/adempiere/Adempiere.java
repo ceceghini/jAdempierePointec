@@ -2,7 +2,7 @@ package it.pointec.adempiere;
 
 import java.sql.SQLException;
 
-import it.adempiere.pointec.util.Ini;
+import it.pointec.adempiere.util.Ini;
 
 import org.compiere.util.CLogMgt;
 import org.compiere.util.DB;

@@ -1,4 +1,4 @@
-package it.adempiere.pointec.util;
+package it.pointec.adempiere.util;
 
 import java.io.FileInputStream;
 import java.math.BigDecimal;

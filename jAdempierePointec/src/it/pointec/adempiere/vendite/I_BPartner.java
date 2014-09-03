@@ -1,8 +1,8 @@
 package it.pointec.adempiere.vendite;
 
-import it.adempiere.pointec.util.Ini;
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.model.BPartner;
+import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

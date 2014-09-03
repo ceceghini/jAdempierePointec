@@ -1,9 +1,9 @@
 package it.pointec.adempiere;
 
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.model.Order;
 import it.pointec.adempiere.model.Orders;
 import it.pointec.adempiere.model.Product;
+import it.pointec.adempiere.util.Util;
 import it.pointec.adempiere.vendite.I_BPartner;
 import it.pointec.adempiere.vendite.I_Product;
 

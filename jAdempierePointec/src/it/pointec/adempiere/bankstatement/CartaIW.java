@@ -1,6 +1,6 @@
 package it.pointec.adempiere.bankstatement;
 
-import it.adempiere.pointec.util.Util;
+import it.pointec.adempiere.util.Util;
 
 import java.io.FileInputStream;
 import java.text.DateFormat;

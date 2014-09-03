@@ -1,6 +1,6 @@
 package it.pointec.adempiere.model;
 
-import it.adempiere.pointec.util.Ini;
+import it.pointec.adempiere.util.Ini;
 
 import java.math.BigDecimal;
 import java.sql.Date;

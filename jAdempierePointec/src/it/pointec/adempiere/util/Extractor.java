@@ -1,4 +1,4 @@
-package it.adempiere.pointec.util;
+package it.pointec.adempiere.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

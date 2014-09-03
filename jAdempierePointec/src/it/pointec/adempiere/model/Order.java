@@ -1,9 +1,9 @@
 package it.pointec.adempiere.model;
 
-import it.adempiere.pointec.util.Ini;
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.converter.BigDecimalConverter;
 import it.pointec.adempiere.converter.DateConverter;
+import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 import java.math.BigDecimal;
 import java.sql.Date;

@@ -1,4 +1,20 @@
-package it.pointec.adempiere;
+/******************************************************************************
+* Product: Adempiere ERP & CRM Smart Business Solution *
+* Copyright (C) 1999-2006 ComPiere, Inc. All Rights Reserved. *
+* This program is free software; you can redistribute it and/or modify it *
+* under the terms version 2 of the GNU General Public License as published *
+* by the Free Software Foundation. This program is distributed in the hope *
+* that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. *
+* See the GNU General Public License for more details. *
+* You should have received a copy of the GNU General Public License along *
+* with this program; if not, write to the Free Software Foundation, Inc., *
+* 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA. *
+* For the text or an alternative of this public license, you may reach us *
+* ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA *
+* or via info@compiere.org or http://www.compiere.org/license.html *
+*****************************************************************************/
+package org.compiere.process;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -10,12 +26,16 @@ import org.compiere.model.MBankAccount;
 import org.compiere.model.MBankStatement;
 import org.compiere.model.MBankStatementLine;
 import org.compiere.model.X_I_BankStatement;
-import org.compiere.process.ProcessInfoParameter;
-import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
-public class prova123 extends SvrProcess {
+/**
+ *	Import Bank Statement from I_BankStatement
+ *
+ *	author Eldir Tomassen
+ *	@version $Id: ImportBankStatement.java,v 1.2 200
+ */
+public class ImportBankStatement2 extends SvrProcess {
 
 	/**	Client to be imported to		*/
 	private int				p_AD_Client_ID = 0;
@@ -59,6 +79,9 @@ public class prova123 extends SvrProcess {
 	 *  Perform process.
 	 *  @return Message
 	 *  @throws Exception
+	 */
+	/* (non-Javadoc)
+	 * @see org.compiere.process.SvrProcess#doIt()
 	 */
 	protected String doIt() throws java.lang.Exception
 	{
@@ -420,7 +443,12 @@ public class prova123 extends SvrProcess {
 					statement.setEftStatementDate(imp.getEftStatementDate());
 					if (statement.save())
 					{
+						/////////////////////////////////////////////////////////////////////////////////////////////////////////
+						// 01.09.2014 - cesare - pointec srl
+						// durante l'import di più estratti conti bancari, dopo il primo estrattoconto il processo si bloccava
+						// aggiunta una riga di codice per azzerare la transazione subito dopo il salvataggio dell'estratto conto
 						account.set_TrxName(null);
+						/////////////////////////////////////////////////////////////////////////////////////////////////////////
 						noInsert++;
 					}
 					lineNo = 10;

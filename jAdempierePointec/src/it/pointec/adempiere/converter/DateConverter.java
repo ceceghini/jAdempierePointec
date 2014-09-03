@@ -1,6 +1,6 @@
 package it.pointec.adempiere.converter;
 
-import it.adempiere.pointec.util.Util;
+import it.pointec.adempiere.util.Util;
 
 import java.sql.Date;
 

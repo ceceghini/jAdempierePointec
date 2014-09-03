@@ -1,10 +1,10 @@
 package it.pointec.adempiere.acquisti;
 
-import it.adempiere.pointec.util.Extractor;
-import it.adempiere.pointec.util.Ini;
-import it.adempiere.pointec.util.Util;
 import it.pointec.adempiere.Adempiere;
 import it.pointec.adempiere.model.InvoicePassive;
+import it.pointec.adempiere.util.Extractor;
+import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 import java.io.File;
 import java.sql.PreparedStatement;
