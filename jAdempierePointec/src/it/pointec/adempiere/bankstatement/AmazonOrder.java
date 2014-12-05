@@ -19,7 +19,7 @@ public class AmazonOrder {
 	public AmazonOrder(String[] data) throws ParseException {
 		_order = data[1];
 		
-		DateFormat dateFormat = new SimpleDateFormat("dd/MMM/yy", Locale.ITALIAN);
+		DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.ITALIAN);
 		_date = new Date(dateFormat.parse(data[0]).getTime());
 		
 		elaboraRiga(data);
@@ -29,7 +29,7 @@ public class AmazonOrder {
 	public void elaboraRiga(String[] data) {
 		
 		//float imp = Float.parseFloat(data[6].replace("€ ", "").replace(",", "."));
-		BigDecimal imp = new BigDecimal(data[6].replace("€ ", "").replace(",", "."));
+		BigDecimal imp = new BigDecimal(data[6].replace("€", "").replace(",", "."));
 		
 		if (data[4].compareTo("Costo prodotti")==0 || data[4].compareTo("Altre transazioni")==0) {
 			gross_amt = gross_amt.add(imp);

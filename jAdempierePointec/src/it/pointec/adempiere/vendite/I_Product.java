@@ -119,7 +119,7 @@ public class I_Product {
 				_stmt.setString(5, p.getSku());
 				_stmt.setString(6, Util.trunc(p.getName(), 60));
 				_stmt.setString(7, p.getName());
-				_stmt.setBigDecimal(9, p.getPrice());
+				_stmt.setBigDecimal(9, p.getPriceWithTax());
 				_stmt.setInt(10, p.getM_product_category_id());
 				
 				_stmt.execute();

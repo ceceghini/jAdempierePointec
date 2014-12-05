@@ -95,14 +95,14 @@ public class Order {
 		
 		if (this.shipping_amount != null) {
 			if (this.shipping_amount.compareTo(new BigDecimal(0))!=0) {
-				p = new Product(Ini.getString("prodotto_spedizione"), this.shipping_amount.multiply(Util.get_aliquota_iva1()));
+				p = new Product(Ini.getString("prodotto_spedizione"), this.shipping_amount);
 				this.products.add(p);
 			}
 		}
 		
 		if (this.cod_fee != null) {
 			if (this.cod_fee.compareTo(new BigDecimal(0))!=0) {
-				p = new Product(Ini.getString("prodotto_contrassegno"), this.cod_fee.multiply(Util.get_aliquota_iva1()));
+				p = new Product(Ini.getString("prodotto_contrassegno"), this.cod_fee);
 				this.products.add(p);
 			}
 		}

@@ -103,6 +103,7 @@ public class I_BPartner {
 		
 		BPartner b;
 		int id;
+		String contactName;
 		
 		try {
 		
@@ -138,7 +139,10 @@ public class I_BPartner {
 				_stmt.setString(9, b.getPostcode());
 				_stmt.setString(10, b.getCity());
 				_stmt.setString(11, b.getRegion_code());
-				_stmt.setString(13, b.getFirstname() + " " + b.getLastname());
+				contactName = b.getFirstname() + " " + b.getLastname();
+				if (contactName.length()>60)
+					contactName = contactName.substring(0, 60);
+				_stmt.setString(13, contactName);
 				_stmt.setString(14, b.getTelephone());
 				_stmt.setString(15, b.getEmail());
 				
@@ -215,6 +219,12 @@ public class I_BPartner {
 					+ " AND i.C_Region_ID=l.C_Region_ID AND i.C_Country_ID=l.C_Country_ID) "
 					+ "WHERE C_BPartner_ID IS NOT NULL AND C_BPartner_Location_ID IS NULL"
 					+ " AND I_IsImported='N'");
+			DB.executeUpdateEx(sql.toString(), null);
+			
+			// Aggiornamento del contact name se esiste già in adempiere
+			sql = new StringBuffer("update I_BPARTNER i "
+					+ "set (i.AD_USER_ID, i.EMAIL) = (select u.AD_USER_ID, u.EMAIL from AD_USER u where i.C_BPARTNER_ID = u.C_BPARTNER_ID) "
+					+ "where exists (select 1 from AD_USER u where i.C_BPARTNER_ID = u.C_BPARTNER_ID)");
 			DB.executeUpdateEx(sql.toString(), null);
 						
 			

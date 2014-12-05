@@ -59,6 +59,53 @@ public class Sda implements I_I_BankStatement_Source {
 		
 		while ((data = reader.readNext()) != null) {
 			
+			if (data.length == 8) {
+				if (data[6].compareTo("CON")==0 || data[6].compareTo("ABS")==0) {
+				
+					line = new I_BankStatement_Line();
+					
+					line.set_date(Util.getDate(data[3], "dd/MM/yyyy"));
+					line.set_gross_amount(Util.getImporto(data[5]));
+					line.set_description("LDV ["+ data[0] +"] ORDINE ["+ data[1] +"] NOMINATIVO ["+ data[4] +"]");
+					lines.add(line);
+					
+					// Date
+					if (first==null)
+						first=line.get_date();
+					
+				}
+			}
+		}
+		
+		reader.close();
+		
+		String bs_name = _name + " [" + first + "]";
+		
+		Iterator<I_BankStatement_Line> it = lines.iterator();
+		while (it.hasNext()) {
+			
+			line = it.next();
+			
+			bs.insertLineIntoAdempiere(line, bs_name);
+			
+		}
+		
+		return bs_name;
+		
+	}
+	
+	/* Metodo relativo al vecchio file sda */
+	/*public String insertIntoAdempiere(String file, I_BankStatement bs) throws Exception {
+		
+		CSVReader reader = new CSVReader(new FileReader(file), ';');
+		String[] data;
+		I_BankStatement_Line line;
+		ArrayList<I_BankStatement_Line> lines = new ArrayList<I_BankStatement_Line>();
+		
+		Date first = null;
+		
+		while ((data = reader.readNext()) != null) {
+			
 			if (data[0].compareTo("LDV")!=0 && data[5].compareTo("Assegno bancario intestato al mittente")!=0) {
 			
 				line = new I_BankStatement_Line();
@@ -91,6 +138,6 @@ public class Sda implements I_I_BankStatement_Source {
 		
 		return bs_name;
 		
-	}
+	}*/
 
 }

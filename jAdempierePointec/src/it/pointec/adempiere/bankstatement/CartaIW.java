@@ -3,6 +3,7 @@ package it.pointec.adempiere.bankstatement;
 import it.pointec.adempiere.util.Util;
 
 import java.io.FileInputStream;
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -47,8 +48,8 @@ public class CartaIW implements I_I_BankStatement_Source {
         	
         	line = new I_BankStatement_Line();
         	
-        	line.set_date(Util.getDate(items[0], "dd/MM/yyyy"));
-			line.set_gross_amount(Util.getImporto(items[items.length-1]));
+        	line.set_date(Util.getDate(items[1], "dd/MM/yyyy"));
+			line.set_gross_amount(Util.getImporto(items[items.length-1]).multiply(new BigDecimal(-1)));
 			line.set_description(riga.substring(22, riga.length()).replaceAll(items[items.length-1], "").trim());
 			
 			if (bs_name==null) {

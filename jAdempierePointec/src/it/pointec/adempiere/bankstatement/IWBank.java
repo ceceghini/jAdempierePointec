@@ -45,14 +45,15 @@ public class IWBank implements I_I_BankStatement_Source {
 	    				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
 	    				bs_name = _name + " [" + dateFormat.format(line.get_date()) + "]";
 	    			}
-	    			bs.insertLineIntoAdempiere(line, null);
+	    			bs.insertLineIntoAdempiere(line, bs_name);
 						
 	    		}
 	    		
 	    	}
-	      }
-	      reader.close( );
-	      return bs_name;
+	    }
+	    reader.close();
+	   
+	    return bs_name;
 		
 	}
 

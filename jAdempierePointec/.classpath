@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java6"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-7-openjdk"/>
 	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/Adempiere.jar" sourcepath="/adempiere360lts"/>
 	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/AdempiereCLib.jar"/>
 	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/CompiereJasperReqs.jar"/>
@@ -14,7 +14,6 @@
 	<classpathentry kind="lib" path="lib/commons-discovery-0.2.jar"/>
 	<classpathentry kind="lib" path="lib/commons-httpclient-3.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="lib" path="lib/jaxrpc.jar"/>
 	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.8.jar"/>
 	<classpathentry kind="lib" path="lib/mailapi.jar"/>
@@ -31,5 +30,7 @@
 	<classpathentry kind="lib" path="lib/xml-apis.jar"/>
 	<classpathentry kind="lib" path="lib/xpp3-1.1.3.4d_b4_min.jar"/>
 	<classpathentry kind="lib" path="lib/xstream-1.4.7.jar"/>
+	<classpathentry kind="lib" path="lib/jaxrpc.jar"/>
+	<classpathentry kind="lib" path="lib/xmlpull-1.1.3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

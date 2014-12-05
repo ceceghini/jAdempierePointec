@@ -7,6 +7,7 @@ import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
 import java.io.File;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +33,7 @@ public class ImportFattureAcquisto {
 	private List<InvoicePassive> _fatture = new ArrayList<InvoicePassive>();
 	private String _type;
 	private int _c_doctype_id = 0;
+	private Date dataIva;
 	
 	private ImportFattureAcquisto (String _type) {
 		
@@ -63,6 +65,12 @@ public class ImportFattureAcquisto {
 			_stmt.setInt(18, 1000000);
 			
 			_stmtBP = DB.prepareStatement("select REGEX_POREFERENCE, GROUP_POREFERENCE, REGEX_DATEINVOICED, GROUP_DATEINVOICED, REGEX_GRANDTOTAL, GROUP_GRANDTOTAL, DATE_INVOICE_FORMAT, EXCLUDE, SKU, C_BPARTNER_ID, replace from POINTEC_FORNITORI where cartella = ? and is_active = 'Y'", null);
+			
+			String sql = "select valore from pointec_parametri";
+			String v = DB.getSQLValueString(null, sql);
+			dataIva = Util.getDate(v, "dd/MM/yyyy");
+			
+			System.out.println("Data liquidazione IVA caricata: ["+dataIva.toString()+"]");
 			
 		}
 		catch (Exception e) {
@@ -204,6 +212,7 @@ public class ImportFattureAcquisto {
 					_stmt.setString(5, Integer.toString(id));
 					//_stmt.setNull(5, Types.VARCHAR);
 					_stmt.setDate(10, acq.get_dateinvoiced());
+					
 					_stmt.setDate(11, acq.get_dateinvoiced());
 					
 					_stmt.setString(17, acq.get_fullpath()+"#"+acq.get_poreference());
@@ -293,13 +302,15 @@ public class ImportFattureAcquisto {
 	
 	private InvoicePassive extractFromFile(File f, ResultSet rs, File d) throws SQLException, ParseException {
 		
+		String parsedText = "";
+		
 		try {
 		
 			InvoicePassive 	i = new InvoicePassive();
 			i.set_filename(f.getName());
 			i.set_fullpath(d.getName()+"/"+f.getName());
 			
-			String parsedText = Util.parsePdf(f);
+			parsedText = Util.parsePdf(f);
 			
 			// Replace text
 			if (rs.getString(11)!=null) {
@@ -347,13 +358,25 @@ public class ImportFattureAcquisto {
 			i.set_sku(rs.getString(9));
 			i.set_c_doctype_id(_c_doctype_id);
 			
+			// La data di ultima liquidazione IVA è successiva alla data della fattura. La fattura va inserita manualmente.
+			if (dataIva.compareTo(i.get_dateinvoiced())>0) {
+				
+				//System.out.println("Data fattura successiva all'ultima liquidazione IVA. Inserire manualmente");
+				Util.addError("Data fattura successiva all'ultima liquidazione IVA. Inserire manualmente ["+i.get_fullpath()+"]\n");
+				
+			}
+			
 			//System.out.println("["+d.getName()+"]["+i.get_poreference()+"] ["+i.get_dateinvoiced()+"] ["+i.get_price()+"]");
 			//System.out.println("["+d.getName()+"]["+f.getName()+"]");
 			
 			return i;
 		}
-		catch (Exception e) {
+		catch (Exception e) {	
+			Util.addError("{\n");
 			Util.addError("["+d.getName()+"] ["+f.getName()+"]\n");
+			Util.addError("\n");
+			Util.addError(parsedText);
+			Util.addError("}\n");
 			Util.addError(e);
 			return null;
 		}

@@ -19,6 +19,12 @@ public class I_BankStatement_Line {
 	public String get_description() {
 		return _description;
 	}
+	public String get_description255() {
+		if (_description.length()>255)
+			return _description.substring(0, 255);
+		else
+			return _description;
+	}
 	public void set_description(String _description) {
 		this._description = _description;
 	}

@@ -16,7 +16,7 @@ public class ImportFattureVendita {
 		
 	}
 
-	public static void elabora() {
+	private static void elabora() {
 		
 		// Fatture
 		System.out.println("INIZIO ELABORAZIONE INVOICE");

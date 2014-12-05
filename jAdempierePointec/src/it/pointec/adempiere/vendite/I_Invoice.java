@@ -12,7 +12,10 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.compiere.model.MBPartner;
 import org.compiere.model.MInvoice;
@@ -40,6 +43,8 @@ public class I_Invoice {
 	
 	private String _first;
 	private String _last;
+	
+	private boolean _reimport = true;
 
 	public I_Invoice(String t) {
 		
@@ -58,18 +63,22 @@ public class I_Invoice {
 		_bpartner = new I_BPartner();
 		
 		try {
-			_stmt = DB.prepareStatement("insert into I_INVOICE (ad_org_id, ad_client_id, i_invoice_id, c_doctype_id, documentno, issotrx, salesrep_id, c_paymentterm_id, C_BPartner_ID, dateinvoiced, dateacct, productvalue, qtyordered, priceactual, c_tax_id, taxamt, description, M_PriceList_ID, description) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", null);
+			_stmt = DB.prepareStatement("insert into I_INVOICE (ad_org_id, ad_client_id, i_invoice_id, c_doctype_id, documentno, issotrx, salesrep_id, c_paymentterm_id, C_BPartner_ID, dateinvoiced, dateacct, productvalue, qtyordered, priceactual, c_tax_id, taxamt, description, M_PriceList_ID, vatledgerdate, vatledgerno, poreference) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", null);
 			_stmt.setInt(1, Ini.getInt("ad_org_id"));
 			_stmt.setInt(2, Ini.getInt("ad_client_id"));
 			_stmt.setString(6, "Y");
 			_stmt.setInt(7, Ini.getInt("salesrep_id"));
 			_stmt.setInt(15, Ini.getInt("c_tax_id"));
-			_stmt.setInt(18, 1000000);
+			_stmt.setInt(18, Ini.getInt("m_pricelist_version_id"));
 			
 			// Numeri di documento
-			_first = DB.getSQLValueString(null, "select max(DOCUMENTNO) from C_INVOICE where AD_CLIENT_ID = ? and AD_ORG_ID = ? and C_DOCTYPE_ID = ?", Ini.getInt("ad_client_id"), Ini.getInt("ad_org_id"), _c_doctype_id);
-			if (_first == null)
-				_first = Ini.getString("first_invoice");
+			
+			_first = Ini.getString("first_invoice");
+			
+			if (_first == null) {
+				_first = DB.getSQLValueString(null, "select max(DOCUMENTNO) from C_INVOICE where AD_CLIENT_ID = ? and AD_ORG_ID = ? and C_DOCTYPE_ID = ?", Ini.getInt("ad_client_id"), Ini.getInt("ad_org_id"), _c_doctype_id);
+				_reimport = true;
+			}
 			
 			//if (_type.compareTo("invoice")==0)
 			//	_last = "EC2014-00000661";
@@ -149,7 +158,7 @@ public class I_Invoice {
 		else
 			url = baseURl + "/feed/adempiere/fatture.php?invoice_id="+_documentno+"&type="+type;
 		
-		//System.out.println(url);
+		System.out.println("Elaborazione url ["+url+"]");
 		Util.downloadFile(url, "/tmp/ordini.xml");
 		
 		FileReader f = new FileReader("/tmp/ordini.xml");
@@ -165,20 +174,32 @@ public class I_Invoice {
 		if (orders.getOrders()==null)
 			return;
 		
+		int n;
+		
 		for (Order o : orders.getOrders()) {
 			
-			_bpartner.addBPartner(o.getBp());
+			if (o.getIncrement_id().compareTo("EC2014-00001724")==0)
+				System.out.println("prova");
 			
-			Util.setCurrent(o.getIncrement_id());
+			if (_reimport)
+				n = DB.getSQLValue(null, "select count(documentno) from c_invoice where documentno = ?", o.getIncrement_id());
+			else
+				n = 0;
 			
-			// Loop sui prodotti ordinati
-			for (Product p : o.getProducts()) {
+			if (n==0) {
+				_bpartner.addBPartner(o.getBp());
 				
-				_product.addProduct(p);
+				Util.setCurrent(o.getIncrement_id());
 				
+				// Loop sui prodotti ordinati
+				for (Product p : o.getProducts()) {
+					
+					_product.addProduct(p);
+					
+				}
+				
+				_orders.put(o.getIncrement_id(), o);
 			}
-			
-			_orders.put(o.getIncrement_id(), o);
 			
 		}
 		
@@ -187,32 +208,26 @@ public class I_Invoice {
 	public void Check() {
 		
 		Order o;
+		int n;
 		
 		for(String k : _orders.keySet()){
 			
-			//if (k.compareTo(EC2014-00000570))
 			o = _orders.get(k);
 			
 			// Verifica totali
-			BigDecimal shipping = o.getShipping_amount().multiply(Util.get_aliquota_iva1());
+			BigDecimal shipping = o.getShipping_amount();
 			BigDecimal fee;
 			if (o.getCod_fee() == null)
 				fee = new BigDecimal(0);
 			else
-				fee = o.getCod_fee().multiply(Util.get_aliquota_iva1());
+				fee = o.getCod_fee();
 			
 			BigDecimal chk_total = o.getItemAmount().add(fee).add(shipping);
 			BigDecimal chk_total2 = chk_total.setScale(2, BigDecimal.ROUND_HALF_EVEN);
 			
 			if (o.getGrand_total().subtract(chk_total2).abs().compareTo(new BigDecimal(0.01))>0) {
 				Util.addError("["+k+"] Totali non congruenti: ["+o.getGrand_total()+"] ["+chk_total+"] ["+chk_total2+"]\n");
-				/*System.out.println(shipping);
-				System.out.println(fee);
-				System.out.println(o.getItemAmount());
-				System.out.println(chk_total);
-				System.out.println(o.getGrand_total());*/
-			}
-			
+			}	
 						
 		}
 		
@@ -235,10 +250,14 @@ public class I_Invoice {
 				Util.setCurrent(o.getIncrement_id());
 				
 				_stmt.setInt(4, _c_doctype_id);
-				_stmt.setString(5, o.getIncrement_id());
-				_stmt.setDate(10, o.getCreated_at());
-				_stmt.setDate(11, o.getCreated_at());
+				_stmt.setString(5, o.getIncrement_id());	// Numero fattura
+				_stmt.setString(20, o.getIncrement_id());	// Protocollo IVA
+				_stmt.setDate(10, o.getCreated_at());	
+				_stmt.setDate(11, o.getCreated_at());	// Data fattura
+				_stmt.setDate(19, o.getCreated_at());	// Data iva
 				_stmt.setString(17, o.getLast_trans_id());
+				
+				_stmt.setString(21, o.getOrder_id());	// Riferimento ordine
 				
 				bp = null;
 				bpId = 0;
@@ -285,7 +304,7 @@ public class I_Invoice {
 					
 					_stmt.setString(12, p.getSku());
 					_stmt.setInt(13, p.getQty_ordered());
-					_stmt.setBigDecimal(14, p.getPrice());
+					_stmt.setBigDecimal(14, p.getPriceWithTax());
 					_stmt.setBigDecimal(16, p.getTax_amount());
 					
 					_stmt.execute();
@@ -335,7 +354,7 @@ public class I_Invoice {
 			para.setParameter("DocAction", MInvoice.DOCACTION_Complete);
 			para.save();        
 	        
-	        ImportInvoice process = new ImportInvoice();
+	        ImportInvoice2 process = new ImportInvoice2();
 	        
 	        process.startProcess(Env.getCtx(), pi, Trx.get(trxName, false));     
 	

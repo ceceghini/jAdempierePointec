@@ -14,6 +14,14 @@ import java.sql.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.pdfparser.PDFParser;
@@ -94,6 +102,7 @@ public class Util {
 				System.err.println("Current record: "+_current);
 			System.err.println("####################################################");
 		//}
+			
 		
 		System.exit(-1);
 		
@@ -220,28 +229,34 @@ public class Util {
 		
 	}
 	
-	public static boolean moveFile(String source, String dest, String nomeFile) {
+	public static boolean moveFile(String source, String dest, String nomeFileSource, String nomeFileDest) {
 		
 		// Verifico se il file sorgente esiste
-		File f_source = new File(source + "/" + nomeFile);
+		File f_source = new File(source + "/" + nomeFileSource);
 		if (!f_source.exists()) {
-			Util.addError("File non esistente [" + source + "/" + nomeFile + "]\n");
+			Util.addError("File non esistente [" + source + "/" + nomeFileSource + "]\n");
 			return false;
 		}
 		
 		// Verifico se la directory di destinazione esiste altrimenti la creo
-		String[] a = nomeFile.split("/");
-		File d = new File(dest + "/" + a[0]);
+		String[] a = nomeFileDest.split("/");
+		File d;
+		if (a.length>1) {
+			d = new File(dest + "/" + a[0]);
+		}
+		else {
+			d = new File(dest);
+		}
+		
 		if (!d.exists())
 			d.mkdir();
 		
 		// Spostamento vero e proprio del file
-		File f_dest = new File(dest + "/" + nomeFile);
+		
+		File f_dest = new File(dest + "/" + nomeFileDest);
 		
 		//System.out.println(f_source.getAbsolutePath() + " >> " + f_dest.getAbsolutePath());
-		f_source.renameTo(f_dest);
-		
-		return true;
+		return f_source.renameTo(f_dest);
 		
 	}
 	
@@ -261,6 +276,8 @@ public class Util {
 		return "";
 		
 	}
+	
+	
 	
 	public static BigDecimal get_aliquota_iva1() {
 		return Ini.getBigDecimal("aliquota_iva").add(new BigDecimal(1));

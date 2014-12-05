@@ -1,5 +1,6 @@
 package it.pointec.adempiere.bankstatement;
 
+import it.pointec.adempiere.process.ImportBankStatement2;
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
@@ -14,7 +15,6 @@ import org.compiere.model.MPInstance;
 import org.compiere.model.MPInstancePara;
 import org.compiere.model.MProcess;
 import org.compiere.process.ProcessInfo;
-import org.compiere.process.ImportBankStatement2;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
@@ -185,8 +185,8 @@ public class I_BankStatement {
 		_stmt.setInt(13, _i);
 		_stmt.setDate(14,  l.get_date());
 		_stmt.setDate(15,  l.get_date());
-		_stmt.setString(16, l.get_description().trim());
-		_stmt.setString(17, l.get_description().trim());
+		_stmt.setString(16, l.get_description255().trim());
+		_stmt.setString(17, l.get_description255().trim());
 		_stmt.setDate(18, l.get_date());
 		_stmt.setString(11, bs_name);
 		
