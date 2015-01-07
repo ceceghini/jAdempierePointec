@@ -12,17 +12,14 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.sql.Types;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Set;
 
 import org.compiere.model.MBPartner;
 import org.compiere.model.MInvoice;
 import org.compiere.model.MPInstance;
 import org.compiere.model.MPInstancePara;
 import org.compiere.model.MProcess;
-import org.compiere.process.ImportInvoice;
 import org.compiere.process.ProcessInfo;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -37,28 +34,13 @@ public class I_Invoice {
 	private I_Product _product;
 	private I_BPartner _bpartner;
 	private String _type;
-	private int _c_doctype_id;
-	
-	private static String _documentno = null;
 	
 	private String _first;
-	private String _last;
 	
-	private boolean _reimport = true;
-
 	public I_Invoice(String t) {
 		
 		_type = t;
 		
-		if (_type.compareTo("invoice")==0)
-			_c_doctype_id = Ini.getInt("doc_type_id_invoice");
-		else if (_type.compareTo("creditmemo")==0)
-			_c_doctype_id = Ini.getInt("doc_type_id_creditmemo");
-		else {
-			Util.addError("Tipologia documento mancante: ["+_type+"]\n");
-			Util.printErrorAndExit();
-		}
-				
 		_product = new I_Product();
 		_bpartner = new I_BPartner();
 		
@@ -70,25 +52,12 @@ public class I_Invoice {
 			_stmt.setInt(7, Ini.getInt("salesrep_id"));
 			_stmt.setInt(15, Ini.getInt("c_tax_id"));
 			_stmt.setInt(18, Ini.getInt("m_pricelist_version_id"));
+			_stmt.setNull(5, Types.INTEGER);
+			_stmt.setNull(20, Types.INTEGER);
 			
 			// Numeri di documento
 			
-			_first = Ini.getString("first_invoice");
-			
-			if (_first == null) {
-				_first = DB.getSQLValueString(null, "select max(DOCUMENTNO) from C_INVOICE where AD_CLIENT_ID = ? and AD_ORG_ID = ? and C_DOCTYPE_ID = ?", Ini.getInt("ad_client_id"), Ini.getInt("ad_org_id"), _c_doctype_id);
-				_reimport = true;
-			}
-			
-			//if (_type.compareTo("invoice")==0)
-			//	_last = "EC2014-00000661";
-			//else if (_type.compareTo("creditmemo")==0)
-			//	_last = "EC2014/N-00000015";
-			
-			//else {
-			//	Util.addError("Tipologia documento mancante: ["+_type+"]\n");
-			//	Util.printErrorAndExit();
-			//}
+			_first = Ini.getString("first_invoice");	
 			
 		}
 		catch (Exception e) {
@@ -134,9 +103,9 @@ public class I_Invoice {
 		//String last = "000003680";
 		
 		try {
-			downloadFromMagento("http://www.lucebrillante.it", _type);
-			downloadFromMagento("http://www.tagliato.it", _type);
-			downloadFromMagento("http://www.stampaperfetta.it", _type);
+			downloadFromMagento("http://www.lucebrillante.it");
+			downloadFromMagento("http://www.tagliato.it");
+			downloadFromMagento("http://www.stampaperfetta.it");
 		}
 		catch (Exception e) {
 			Util.addError(e);
@@ -149,14 +118,12 @@ public class I_Invoice {
 	 * @param baseUrl	sito internet
 	 * @throws IOException
 	 */
-	public void downloadFromMagento(String baseURl, String type) throws IOException {
+	public void downloadFromMagento(String baseURl) throws IOException {
 		
 		// Download del file
 		String url;
-		if (_documentno==null)
-			url = baseURl + "/feed/adempiere/fatture.php?first_invoice_id="+_first+"&last_invoice_id="+_last+"&type="+type;
-		else
-			url = baseURl + "/feed/adempiere/fatture.php?invoice_id="+_documentno+"&type="+type;
+		
+		url = baseURl + "/feed/adempiere/fatture.php?first_invoice_id="+_first;
 		
 		System.out.println("Elaborazione url ["+url+"]");
 		Util.downloadFile(url, "/tmp/ordini.xml");
@@ -178,18 +145,12 @@ public class I_Invoice {
 		
 		for (Order o : orders.getOrders()) {
 			
-			if (o.getIncrement_id().compareTo("EC2014-00001724")==0)
-				System.out.println("prova");
-			
-			if (_reimport)
-				n = DB.getSQLValue(null, "select count(documentno) from c_invoice where documentno = ?", o.getIncrement_id());
-			else
-				n = 0;
+			n = DB.getSQLValue(null, "select count(poreference) from c_invoice where poreference = ?", o.getOrder_id());
 			
 			if (n==0) {
 				_bpartner.addBPartner(o.getBp());
 				
-				Util.setCurrent(o.getIncrement_id());
+				Util.setCurrent(o.getOrder_id());
 				
 				// Loop sui prodotti ordinati
 				for (Product p : o.getProducts()) {
@@ -198,7 +159,7 @@ public class I_Invoice {
 					
 				}
 				
-				_orders.put(o.getIncrement_id(), o);
+				_orders.put(o.getOrder_id(), o);
 			}
 			
 		}
@@ -208,7 +169,6 @@ public class I_Invoice {
 	public void Check() {
 		
 		Order o;
-		int n;
 		
 		for(String k : _orders.keySet()){
 			
@@ -247,11 +207,15 @@ public class I_Invoice {
 				o = _orders.get(k);
 				o.addShippingAndFeeProduct();
 				
-				Util.setCurrent(o.getIncrement_id());
+				Util.setCurrent(o.getOrder_id());
 				
-				_stmt.setInt(4, _c_doctype_id);
-				_stmt.setString(5, o.getIncrement_id());	// Numero fattura
-				_stmt.setString(20, o.getIncrement_id());	// Protocollo IVA
+				if (o.getBp().getIs_business_address()==1)
+					_stmt.setInt(4, Ini.getInt("doc_type_id_invoice"));
+				else
+					_stmt.setInt(4, Ini.getInt("doc_type_id_corrispettivo"));
+				
+				//_stmt.setString(5, o.getIncrement_id());	// Numero fattura
+				//_stmt.setString(20, o.getIncrement_id());	// Protocollo IVA
 				_stmt.setDate(10, o.getCreated_at());	
 				_stmt.setDate(11, o.getCreated_at());	// Data fattura
 				_stmt.setDate(19, o.getCreated_at());	// Data iva
@@ -275,7 +239,7 @@ public class I_Invoice {
 				}
 				
 				if (bp == null)
-					Util.addError("BP non trovato ["+o.getIncrement_id()+"] ["+o.getBp().getTaxcode()+"] ["+o.getBp().getVatnumber()+"] ["+o.getBp().getCompany()+"]\n");
+					Util.addError("BP non trovato ["+o.getOrder_id()+"] ["+o.getBp().getTaxcode()+"] ["+o.getBp().getVatnumber()+"] ["+o.getBp().getCompany()+"]\n");
 				else
 					_stmt.setInt(9, bp.get_ID());
 				
@@ -296,7 +260,7 @@ public class I_Invoice {
 				
 				for (Product p : o.getProducts()) {
 				
-					Util.setCurrent(o.getIncrement_id()+"#"+p.getSku());
+					Util.setCurrent(o.getOrder_id()+"#"+p.getSku());
 					
 					// Inserimento prodotti nella tabella di import
 					id = Util.getNextSequence("i_invoice");
@@ -384,11 +348,12 @@ public class I_Invoice {
 	private void postProcess() {
 		
 		try {
-			PreparedStatement stmt = DB.prepareStatement("update c_invoice set C_BANKACCOUNT_ID = ? where C_PAYMENTTERM_ID = ? and C_DOCTYPE_ID = ? and C_BANKACCOUNT_ID is null", null);
+			PreparedStatement stmt = DB.prepareStatement("update c_invoice set C_BANKACCOUNT_ID = ? where C_PAYMENTTERM_ID = ? and C_DOCTYPE_ID in (?, ?) and C_BANKACCOUNT_ID is null", null);
 			
 			stmt.setInt(1, Ini.getInt("paymenttem_amazon"));
 			stmt.setInt(2, Ini.getInt("bankaccount_amazon"));
-			stmt.setInt(3, _c_doctype_id);
+			stmt.setInt(3, Ini.getInt("doc_type_id_invoice"));
+			stmt.setInt(3, Ini.getInt("doc_type_id_corrispettivo"));
 			stmt.executeUpdate();
 			
 			stmt.setInt(1, Ini.getInt("paymenttem_contrassegno"));
@@ -428,15 +393,15 @@ public class I_Invoice {
 			Util.printErrorAndExit();
 		}
 		
-		if (Ini.istrue("import_invoice")) {
+		//if (Ini.istrue("import_invoice")) {
 			importIntoAdempiere();
 			Util.printErrorAndExit();
 		
-			process();
+			/*process();
 			Util.printErrorAndExit();
 			
 			postProcess();
-			Util.printErrorAndExit();
-		}
+			Util.printErrorAndExit();*/
+		//}
 	}
 }

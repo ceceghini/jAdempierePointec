@@ -14,6 +14,7 @@ public class BPartner {
 	private String telephone;
 	private String email;
 	private String customer_id;
+	private int is_business_address;
 	
 	public String getTaxcode() {
 		
@@ -70,6 +71,10 @@ public class BPartner {
 	}
 	public String getCustomer_id() {
 		return customer_id;
+	}
+	
+	public int getIs_business_address() {
+		return is_business_address;
 	}
 	
 	public String getValue() {

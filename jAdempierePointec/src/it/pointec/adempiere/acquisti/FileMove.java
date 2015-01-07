@@ -5,14 +5,12 @@ import java.io.FileOutputStream;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
 
 import org.compiere.model.MBPartner;
 import org.compiere.model.MInvoice;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
-import com.ibm.icu.util.Calendar;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfReader;
@@ -147,7 +145,6 @@ public class FileMove {
 			MBPartner b;
 			String nomeFileSource;
 			String nomeFileDest;
-			String[] a;
 			PdfContentByte content;
 			PdfReader pdfReader;
 			PdfStamper pdfStamper;

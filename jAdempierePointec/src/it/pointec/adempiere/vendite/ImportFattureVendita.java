@@ -34,7 +34,7 @@ public class ImportFattureVendita {
 		o.importAndProcess();
 		
 		// Note di credito
-		System.out.println("INIZIO ELABORAZIONE CREDITMEMO");
+		/*System.out.println("INIZIO ELABORAZIONE CREDITMEMO");
 		o = new I_Invoice("creditmemo");
 		
 		o.initialCheck();
@@ -46,7 +46,7 @@ public class ImportFattureVendita {
 		o.Check();
 		Util.printErrorAndExit();
 		
-		o.importAndProcess();
+		o.importAndProcess();*/
 		
 	}
 

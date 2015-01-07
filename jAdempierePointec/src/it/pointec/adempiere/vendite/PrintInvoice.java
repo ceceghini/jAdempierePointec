@@ -5,18 +5,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import org.compiere.model.MClient;
-import org.compiere.model.MQuery;
-import org.compiere.model.PrintInfo;
-import org.compiere.model.X_C_Invoice;
+import org.compiere.model.MMailText;
+import org.compiere.model.MPInstance;
+import org.compiere.model.MProcess;
 import org.compiere.print.MPrintFormat;
-import org.compiere.print.ReportEngine;
+import org.compiere.process.ProcessInfo;
 import org.compiere.util.DB;
 import org.compiere.util.EMail;
 import org.compiere.util.Env;
-import org.compiere.util.Language;
+import org.compiere.util.Trx;
 
 import com.f3p.adempiere.model.override.MInvoice;
-import com.sfcommerce.jpaymentcomponent.ssl.Client;
 
 import it.pointec.adempiere.Adempiere;
 import it.pointec.adempiere.util.Ini;
@@ -24,8 +23,19 @@ import it.pointec.adempiere.util.Util;
 
 public class PrintInvoice {
 	
-	MClient _client = MClient.get(Env.getCtx());
-	String documentDir = _client.getDocumentDir();
+	private MPrintFormat format;
+	private MProcess process;
+	private MClient client;
+	private MMailText mText;
+	
+	private PrintInvoice() {
+		
+		client = MClient.get(Env.getCtx());
+		format = MPrintFormat.get (Env.getCtx(), 1000010, false);
+		process = MProcess.get (Env.getCtx(), format.getJasperProcess_ID());
+		mText = new MMailText(Env.getCtx(), Ini.getInt("r_mailtext_id"), null);
+		
+	}
 
 	public static void main(String[] args) {
 		
@@ -49,15 +59,11 @@ public class PrintInvoice {
 	
 	private void process() {
 		
-		System.out.println(_client.get_TableName());
-		
-		return;
-		
-		/*try {
+		try {
 			
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id, b.C_BPARTNER_ID, u.AD_USER_ID, u.EMAIL from c_invoice i join c_bpartner b on i.C_BPARTNER_ID = b.C_BPARTNER_ID join ad_user u on b.C_BPARTNER_ID = u.C_BPARTNER_ID where i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and i.DOCUMENTNO = '14-00060'", null);
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id, u.EMAIL from c_invoice i join c_bpartner b on i.C_BPARTNER_ID = b.C_BPARTNER_ID join ad_user u on b.C_BPARTNER_ID = u.C_BPARTNER_ID where i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and i.ISPRINTED='N'", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
-			stmt.setInt(2, 1000002);
+			stmt.setInt(2, Ini.getInt("doc_type_id_invoice"));
 			
 			ResultSet rs = stmt.executeQuery();
 			
@@ -65,67 +71,79 @@ public class PrintInvoice {
 				
 				System.out.println(rs.getString(1));
 				
-				sendEmail(rs.getInt(1), rs.getString(4));
+				//sendEmail(rs.getInt(1), rs.getString(4));
+				sendEmail(rs.getInt(1), "anpiffer@gmail.com");
 				
 			}
 			
 		}
 		catch (Exception e) {
 			Util.addError(e);
-		}*/
+		}
 		
 	}
 	
 	private void sendEmail(int C_Invoice_ID, String to_email) {
 		
-	//old_C_Invoice_ID = C_Invoice_ID;
-		// Set Language when enabled
-		Language language = Language.getLanguage("en_US");	// Base Language
-		int AD_PrintFormat_ID = 1000010;
-		int copies = 1;
-		//int AD_User_ID = rs.getInt(6);
-		//MUser to = new MUser (getCtx(), AD_User_ID, get_TrxName());
-		//String DocumentNo = rs.getString(7);
-		//C_BPartner_ID = rs.getInt(8);
-		//
-		String documentDir = "/tmp";
+		MInvoice i = new MInvoice(Env.getCtx(), C_Invoice_ID, null);
 		
-		// Get Format & Data
-		MPrintFormat format = MPrintFormat.get (Env.getCtx(), AD_PrintFormat_ID, false);
+		MPInstance pInstance = new MPInstance (process, C_Invoice_ID);
+		ProcessInfo pi = new ProcessInfo (process.getName(), process.getAD_Process_ID(), MInvoice.Table_ID, C_Invoice_ID);
+		pi.setAD_User_ID(Env.getAD_User_ID(Env.getCtx()));
+		pi.setAD_Client_ID(Env.getAD_Client_ID(Env.getCtx()));
+		pi.setClassName(process.getClassname());
+		pi.setAD_PInstance_ID(pInstance.getAD_PInstance_ID());
 		
-		format.setLanguage(language);
-		format.setTranslationLanguage(language);
+		pi.setPrintPreview (false);
+		pi.setIsBatch(true);
 		
-		// query
-		MQuery query = new MQuery("C_Invoice_Header_v");
-		//query.addRestriction("C_Invoice_ID", MQuery.EQUAL, new Integer(C_Invoice_ID));
-		//System.out.println(query.getWhereClause());
-		// Engine
-		PrintInfo info = new PrintInfo(
-		"DocumentNo",
-		X_C_Invoice.Table_ID,
-		C_Invoice_ID,
-		1001601);
-		info.setCopies(copies);
-		ReportEngine re = new ReportEngine(Env.getCtx(), format, query, info);
+		Trx trx = Trx.get(Trx.createTrxName("WebPrc"), true);
 		
-		String subject = "prova";
-		EMail email = _client.createEMail("ceceghini@gmail.com", subject, null);
+		boolean processOK = false;
 		
-		String message = "prova";
+		try
+		{				
+			processOK = process.processIt(pi, trx);			
+			trx.commit();
+			trx.close();
+		}
+		catch (Throwable t)
+		{
+			trx.rollback();
+			trx.close();
+		}
 		
-		email.setSubject (subject);
-		email.setMessageText (message);
-		//
+		File f_invoice;
+		if(processOK)
+		{
+			f_invoice=pi.getPDFReport();
+			
+			String subject = mText.getMailHeader() + " - " + i.getDocumentNo();
+			EMail email = client.createEMail(to_email, subject, null);
+			
+			String message = mText.getMailText(true);
+			
+			email.setMessageHTML(subject, message);
+			
+			email.addAttachment(f_invoice);
+			
+			String msg = email.send();
+			
+			if (msg.compareTo("OK")==0) {
+				i.setIsPrinted(true);
+				i.save();
+			}
+			
+			//MUserMail um = new MUserMail(mText, getAD_User_ID(), email);
+			
+		}
+		else
+		{
+			Util.addError("Errore nella generazione della fattura\n");
+			return;
+		}
 		
-		File invoice = invoice = new File(MInvoice.getPDFFileName(documentDir, C_Invoice_ID));
-		File attachment = re.getPDF(invoice);
 		
-		email.addAttachment(attachment);
-		//
-		String msg = email.send();
-		
-		System.out.println(msg); 
 		
 	}
 

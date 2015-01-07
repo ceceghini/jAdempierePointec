@@ -118,7 +118,7 @@ public class I_Order {
 				
 			}
 			
-			_orders.put(o.getIncrement_id(), o);
+			_orders.put(o.getOrder_id(), o);
 			
 		}
 		

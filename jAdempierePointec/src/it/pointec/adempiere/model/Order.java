@@ -15,7 +15,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 public class Order {
 
-	private String increment_id;
+	//private String increment_id;
 	
 	private String order_id;
 	
@@ -38,9 +38,9 @@ public class Order {
 	@XStreamImplicit(itemFieldName = "product")
 	private List<Product> products = new ArrayList<Product>();
 
-	public String getIncrement_id() {
-		return increment_id;
-	}
+	//public String getIncrement_id() {
+	//	return increment_id;
+	//}
 	
 	public String getOrder_id() {
 		return order_id;

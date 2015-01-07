@@ -23,17 +23,7 @@ import it.pointec.adempiere.util.Util;
 
 public class Riconcilia {
 	
-	/*private String _sql;
-	private String _sqlR;
-	private String date2;
-	private String date5;
-	private String date7;
-	private String date9;
-	private String date11;
-	private String date13;
-	private String date15;
-	private String date17;
-	private String date19;*/
+	private String riconciliazioniName = ""; 
 	
 	public static void main(String[] args) {
 		
@@ -63,137 +53,6 @@ public class Riconcilia {
 		
 	}
 
-	public Riconcilia() {
-		
-		/*_sql  = "select l.c_bankstatementline_id, i.c_invoice_id, i.c_bpartner_id"
-				  + "	from c_bankstatementline l"
-				  + "	  join c_invoice i "
-				  + "        on l.ad_client_id = i.ad_client_id"
-				  + "       and l.ad_org_id = i.ad_org_id"
-				  + "       and i.c_payment_id is null"
-				  + "       and i.ISPAID = 'N'"
-				  + "       and i.c_doctype_id = " + Ini.getString("doc_type_id_invoice")
-				  + "       and abs (l.trxamt - i.grandtotal) <= 0.03"
-				  + "	  join c_bpartner b"
-				  + "	    on i.c_bpartner_id = b.c_bpartner_id"
-				  + "	  join c_bankstatement bs"
-				  + "	    on l.c_bankstatement_id = bs.c_bankstatement_id"
-				  + " where memo = 'daelaborare'"
-				  + "   and l.ad_client_id = ?"
-				  + "   and l.ad_org_id = ?";
-		
-		_sqlR  = "select l.c_bankstatementline_id, i.c_invoice_id, i.c_bpartner_id"
-				  + "	from c_bankstatementline l"
-				  + "	  join c_invoice i "
-				  + "        on l.ad_client_id = i.ad_client_id"
-				  + "       and l.ad_org_id = i.ad_org_id"
-				  + "       and i.c_payment_id is null"
-				  + "       and i.ISPAID = 'N'"
-				  + "       and i.c_doctype_id = " + Ini.getString("doc_type_id_invoice_acq")
-				  + "       and abs (l.trxamt + i.grandtotal) <= 0.01"
-				  + "	  join c_bpartner b"
-				  + "	    on i.c_bpartner_id = b.c_bpartner_id"
-				  + "	  join c_bankstatement bs"
-				  + "	    on l.c_bankstatement_id = bs.c_bankstatement_id"
-				  + " where memo = 'daelaborare'"
-				  + "   and l.ad_client_id = ?"
-				  + "   and l.ad_org_id = ?";
-		
-		date2 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 2) or"
-		      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 2))";
-		
-		date5 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 5) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 5))";
-		
-		date7 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 7) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 7))";
-		
-		date9 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 9) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 9))";
-		
-		date11 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 11) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 11))";
-		
-		date13 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 13) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 13))";
-		
-		date15 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 15) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 15))";
-		
-		date17 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 17) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 17))";
-		
-		date19 = "   and ((l.valutadate between i.dateinvoiced and i.dateinvoiced + 19) or"
-			      + "       (i.dateinvoiced between l.valutadate and l.valutadate + 19))";*/
-		
-		DB.executeUpdate("update c_bankstatementline set c_invoice_id = null, c_bpartner_id = null where ad_client_id = 1000002 and ad_org_id = 1000002 and c_payment_id is null", null);
-		
-	}
-	
-	/*private void riconciliaDB() {
-		
-		try {
-			String sql = "select query, acquisti, vendite from POINTEC_RICONCILIAZIONI where active = 'Y'";
-			PreparedStatement pstmt = DB.prepareStatement(sql, null);
-			ResultSet rs = pstmt.executeQuery();
-			
-	        while (rs.next ()) {
-				
-	        	if (rs.getString(3).compareTo("Y")==0) {
-		        	eseguiRiconciliazione(false, date2, rs.getString(1));
-		        	eseguiRiconciliazione(false, date5, rs.getString(1));
-		        	eseguiRiconciliazione(false, date7, rs.getString(1));
-		        	eseguiRiconciliazione(false, date9, rs.getString(1));
-		        	eseguiRiconciliazione(false, date11, rs.getString(1));
-		        	eseguiRiconciliazione(false, date13, rs.getString(1));
-		        	eseguiRiconciliazione(false, date15, rs.getString(1));
-		        	eseguiRiconciliazione(false, date17, rs.getString(1));
-		        	eseguiRiconciliazione(false, date19, rs.getString(1));
-	        	}
-	        	
-	        	if (rs.getString(2).compareTo("Y")==0) {
-	        		eseguiRiconciliazione(true, date2, rs.getString(1));
-	        		eseguiRiconciliazione(true, date5, rs.getString(1));
-	        		eseguiRiconciliazione(true, date7, rs.getString(1));
-	        		eseguiRiconciliazione(true, date9, rs.getString(1));
-	        		eseguiRiconciliazione(true, date11, rs.getString(1));
-		        	eseguiRiconciliazione(true, date13, rs.getString(1));
-		        	eseguiRiconciliazione(true, date15, rs.getString(1));
-		        	eseguiRiconciliazione(true, date17, rs.getString(1));
-		        	eseguiRiconciliazione(true, date19, rs.getString(1));
-	        	}
-				
-			}
-	        
-	        pstmt.close();
-	        rs.close();
-	        
-		}
-		catch (Exception e) {
-			Util.addError(e);
-		}
-		
-	}*/
-	
-	/*private void eseguiRiconciliazione(boolean bReverse, String date, String append) {
-		
-		StringBuffer sql;
-		
-		if (bReverse)
-			sql = new StringBuffer(_sqlR);
-		else
-			sql = new StringBuffer(_sql);
-		
-		sql.append(append);
-		
-		sql.append(date);
-		
-		//System.out.println(sql);
-		riconciliaAndInsert(sql.toString());
-		Util.printErrorAndExit();
-		
-	}*/
-	
 	private void riconciliaVendite() {
 		
 		
@@ -201,7 +60,6 @@ public class Riconcilia {
 		
 			int invoice_id = 0;
 			String sql = "select c_bankstatementline_id, efttrxid, eftmemo, eftamt, eftstatementlinedate from C_BANKSTATEMENTLINE where memo = 'daelaborare' and EFTAMT > 0 and ad_client_id = ? and ad_org_id = ?";
-			//sql += " and eftmemo = 'BONIFICO A VOSTRO FAVORE ORDINANTE: UNISID SRL CAUSALE: Note: SALDO ORDINE N. 4473 DEL 02 04 201'";
 			
 			PreparedStatement stmt = DB.prepareStatement(sql, null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
@@ -218,6 +76,7 @@ public class Riconcilia {
 					invoice_id = getInvoiceByTrxId(rs.getString(2));
 					
 					if (invoice_id!=0) {
+						riconciliazioniName = "getInvoiceByTrxId";
 						elaboraLinea(rs.getInt(1), invoice_id);
 					}
 					
@@ -291,7 +150,7 @@ public class Riconcilia {
 	private int getInvoiceByLike (String eftmemo, BigDecimal eftamt, Date eftstatementlinedate, boolean dateInvoiceEqual, boolean dateInvoceMinus) {
 		
 		try {
-			String sql = "select query from POINTEC_RICONCILIAZIONI where active = 'Y' order by sort";
+			String sql = "select query, name from POINTEC_RICONCILIAZIONI where active = 'Y' order by sort";
 			PreparedStatement pstmt = DB.prepareStatement(sql, null);
 			ResultSet rs = pstmt.executeQuery();
 			int invoice_id;
@@ -300,6 +159,7 @@ public class Riconcilia {
 				
 				invoice_id = getInvoice(eftmemo, eftamt, rs.getString(1), eftstatementlinedate, dateInvoiceEqual, dateInvoceMinus);
 				if (invoice_id != 0) {
+					riconciliazioniName = rs.getString(2);
 					rs.close();
 					pstmt.close();
 					return invoice_id;
@@ -408,10 +268,11 @@ public class Riconcilia {
 		
 		try {
 			
-			String sql = "update C_BANKSTATEMENTLINE set memo = null, (c_bpartner_id, c_invoice_id) = (select c_bpartner_id, c_invoice_id from c_invoice where c_invoice_id = ?) where c_bankstatementline_id = ?";
+			String sql = "update C_BANKSTATEMENTLINE set memo = null, referenceno = ?, (c_bpartner_id, c_invoice_id) = (select c_bpartner_id, c_invoice_id from c_invoice where c_invoice_id = ?) where c_bankstatementline_id = ?";
 			PreparedStatement stmt = DB.prepareStatement(sql, null);
-			stmt.setInt(1, c_invoice_id);
-			stmt.setInt(2, c_bankstatementline_id);
+			stmt.setString(1, this.riconciliazioniName);
+			stmt.setInt(2, c_invoice_id);
+			stmt.setInt(3, c_bankstatementline_id);
 			
 			stmt.execute();
 			
@@ -425,42 +286,6 @@ public class Riconcilia {
 		}
 		
 	}
-	
-	/***
-	 * Abbinamento fattura riga estratto conto
-	 * @param sql
-	 */
-	/*private void riconciliaAndInsert(String sql) {
-		
-		try {
-			
-			PreparedStatement stmt = DB.prepareStatement(sql, null);
-			stmt.setInt(1, Ini.getInt("ad_client_id"));
-			stmt.setInt(2, Ini.getInt("ad_org_id"));
-			
-			PreparedStatement stmtU = DB.prepareStatement("update c_bankstatementline set c_invoice_id = ?, c_bpartner_id = ? where c_bankstatementline_id = ?", null);
-			
-			ResultSet rs = stmt.executeQuery();
-			while (rs.next ()) {
-				
-				stmtU.setInt(1, rs.getInt(2));
-				stmtU.setInt(2, rs.getInt(3));
-				stmtU.setInt(3, rs.getInt(1));
-				
-				stmtU.executeUpdate();
-				
-			}
-			
-			DB.close(rs);
-			DB.close(stmt);
-			DB.close(stmtU);
-			
-		}
-		catch (Exception e) {
-			Util.addError(e);
-		}
-	*	
-	}*/
 	
 	private void execute_RICONCILIA_UPDATE() {
 		
