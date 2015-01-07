@@ -393,15 +393,15 @@ public class I_Invoice {
 			Util.printErrorAndExit();
 		}
 		
-		//if (Ini.istrue("import_invoice")) {
+		if (Ini.istrue("import_invoice")) {
 			importIntoAdempiere();
 			Util.printErrorAndExit();
 		
-			/*process();
+			process();
 			Util.printErrorAndExit();
 			
 			postProcess();
-			Util.printErrorAndExit();*/
-		//}
+			Util.printErrorAndExit();
+		}
 	}
 }

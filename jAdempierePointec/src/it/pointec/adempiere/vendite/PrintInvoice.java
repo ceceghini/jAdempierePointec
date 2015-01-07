@@ -69,10 +69,10 @@ public class PrintInvoice {
 			
 			while (rs.next()) {
 				
-				System.out.println(rs.getString(1));
+				//System.out.println(rs.getString(1));
 				
-				//sendEmail(rs.getInt(1), rs.getString(4));
-				sendEmail(rs.getInt(1), "anpiffer@gmail.com");
+				sendEmail(rs.getInt(1), rs.getString(4));
+				//sendEmail(rs.getInt(1), "anpiffer@gmail.com");
 				
 			}
 			
