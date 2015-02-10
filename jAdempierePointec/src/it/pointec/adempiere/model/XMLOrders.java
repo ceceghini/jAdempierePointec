@@ -7,12 +7,12 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 @XStreamAlias("orders")
-public class Orders {
+public class XMLOrders {
 
 	@XStreamImplicit(itemFieldName = "order")
-	private List<Order> orders = new ArrayList<Order>();
+	private List<XMLOrder> orders = new ArrayList<XMLOrder>();
 
-	public List<Order> getOrders() {
+	public List<XMLOrder> getOrders() {
 		return orders;
 	}
 	

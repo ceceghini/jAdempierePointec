@@ -21,13 +21,22 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.compiere.util.DB;
 
+/**
+ * Classe contenente funzioni di utilità generica
+ * @author cesare
+ *
+ */
 public class Util {
 	
 	private static StringBuffer _error = new StringBuffer();
 	private static boolean _has_error = false;
-	private static String _current = null;
 	
-	// Download di un xml dal sito magento
+	/**
+	 * Download e salvataggio di un file
+	 * @param url	File sorgente
+	 * @param file	File di destinazione
+	 * @throws IOException
+	 */
 	public static void downloadFile(String url, String file) throws IOException {
 		
 		URL website = new URL(url);
@@ -38,31 +47,54 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Aggiunta di un errore al log
+	 * @param msg	Messaggio di errore
+	 */
 	public static void addError(String msg) {
 		_error.append(msg);
 		_has_error = true;
 	}
 	
+	/**
+	 * Aggiunta di un exception al log
+	 * @param e	Exception
+	 */
 	public static void addError (Exception e) {
 		StringWriter sw = new StringWriter();
 		e.printStackTrace(new PrintWriter(sw));
-		_error.append(sw.toString());
-		_has_error = true;
+		addError(sw.toString());
 	}
 	
+	/**
+	 * Sono presenti errori nel log
+	 * @return
+	 */
 	public static boolean HasError() {
 		return _has_error;
 	}
 	
+	/**
+	 * Log degli errori
+	 * @return
+	 */
 	public static String getError() {
 		return _error.toString();
 	}
 	
+	/**
+	 * Azzeramento log errori
+	 */
 	public static void resetError() {
 		_error = new StringBuffer();
 		_has_error = false;
 	}
 	
+	/**
+	 * Recupero id successivo di una tabella
+	 * @param table	nome tabella
+	 * @return
+	 */
 	public static int getNextSequence(String table) {
 		
 		String sql = "select CURRENTNEXT from ad_sequence where lower(name) = '"+table+"'";
@@ -71,6 +103,10 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Aggiornamento id successivo di una tabella
+	 * @param table
+	 */
 	public static void increaseSequence(String table) {
 		
 		String sql = "update ad_sequence set CURRENTNEXT = CURRENTNEXT + 1 where lower(name) = '"+table+"'";
@@ -79,27 +115,28 @@ public class Util {
 	
 	}
 	
+	/**
+	 * Output degli errori ed eventuale uscita
+	 */
 	public static void printErrorAndExit() {
 		
 		if (!Util.HasError())
 			return;
 		
-		//if (_email) {
-		//	sendMail("cesare@pointec.it", Util.getError());
-		//}
-		//else {
-			System.err.println("#################### ERRORE ########################");
-			System.err.println(getError());
-			if (_current!=null)
-				System.err.println("Current record: "+_current);
-			System.err.println("####################################################");
-		//}
+		System.err.println("#################### ERRORE ########################");
+		System.err.println(getError());
+		System.err.println("####################################################");
 			
-		
 		System.exit(-1);
 		
 	}
 	
+	/**
+	 * Trunc di una stringa
+	 * @param s	Stringa
+	 * @param lenght	Numero caratteri
+	 * @return
+	 */
 	public static String trunc(String s, int lenght) {
 		
 		if (s.length()>lenght)
@@ -109,52 +146,24 @@ public class Util {
 		
 	}
 	
-	public static void setCurrent(String s) {
-		_current = s;
-	}
-
-	public static void Elaborato(String subPath, String file, String bs_name) throws IOException {
-		
-		if (_has_error)
-			return;
-		
-		String source = Ini.getString("filepath") + "/" + subPath + "/" + file;
-		
-		File f_source = new File(source);
-
-		if (!f_source.exists())
-			return;
-		
-		// file destinazione
-		//long lastModified = f_source.lastModified();
-		//Date date = new Date(lastModified);
-		
-		String dest = Ini.getString("filepath_elaborati") + "/" + subPath;
-		
-		File d_dest = new File(dest);
-		
-		if (!d_dest.exists())
-			d_dest.mkdir();
-		
-		
-		dest = Ini.getString("filepath_elaborati") + "/" + subPath + "/" + bs_name;
-		
-		File f_dest = new File(dest);
-		
-		f_source.renameTo(f_dest);
-		
-	}
-	
+	/**
+	 * Conversione di una stringa in data
+	 * @param s			Stringa da convertire
+	 * @param format	Formato data
+	 * @return
+	 * @throws ParseException
+	 */
 	public static Date getDate(String s, String format) throws ParseException {
 		DateFormat dateFormat = new SimpleDateFormat(format);
 		Date d = new Date(dateFormat.parse(s).getTime());
 		return d;
 	}
 	
-	public static String getSqlPath() {
-		return "/home/cesare/Scrivania/bank/sql";
-	}
-		
+	/**
+	 * Conversione di un pdf in testo
+	 * @param f	File pdf da convertire
+	 * @return
+	 */
 	public static String parsePdf(File f) {
 		
 		COSDocument cosDoc = null;
@@ -191,6 +200,11 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Conversione di una stringa in bigdecimal
+	 * @param s
+	 * @return
+	 */
 	public static BigDecimal getImporto(String s) {
 		
 		String str = s.replace("€", "").trim();
@@ -221,6 +235,14 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Spostamento di un file
+	 * @param source			Percorso sorgente
+	 * @param dest				Percorso destinazione
+	 * @param nomeFileSource	Nome file sorgente
+	 * @param nomeFileDest		Nome file destinazione
+	 * @return
+	 */
 	public static boolean moveFile(String source, String dest, String nomeFileSource, String nomeFileDest) {
 		
 		// Verifico se il file sorgente esiste
@@ -252,6 +274,11 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Recupero percorso fatture sulla base del doctype_id
+	 * @param c_doctype_id
+	 * @return
+	 */
 	public static String doctypeidToPath(int c_doctype_id) {
 		
 		if (c_doctype_id == Ini.getInt("doc_type_id_invoice_acq"))
@@ -269,12 +296,19 @@ public class Util {
 		
 	}
 	
-	
-	
+	/**
+	 * Recupero aliquota iva
+	 * @return
+	 */
 	public static BigDecimal get_aliquota_iva1() {
 		return Ini.getBigDecimal("aliquota_iva").add(new BigDecimal(1));
 	}
 	
+	/**
+	 * Verifica se la stringa contiene un numero
+	 * @param str
+	 * @return
+	 */
 	public static boolean isNumeric(String str)  
 	{  
 		try  

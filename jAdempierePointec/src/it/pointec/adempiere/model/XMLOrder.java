@@ -13,7 +13,7 @@ import java.util.List;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
-public class Order {
+public class XMLOrder {
 
 	//private String increment_id;
 	
@@ -33,10 +33,10 @@ public class Order {
 	
 	private String last_trans_id;
 	
-	private BPartner bp;
+	private XMLBPartner bp;
 	
 	@XStreamImplicit(itemFieldName = "product")
-	private List<Product> products = new ArrayList<Product>();
+	private List<XMLProduct> products = new ArrayList<XMLProduct>();
 
 	//public String getIncrement_id() {
 	//	return increment_id;
@@ -70,11 +70,11 @@ public class Order {
 		return last_trans_id;
 	}
 
-	public BPartner getBp() {
+	public XMLBPartner getBp() {
 		return bp;
 	}
 
-	public List<Product> getProducts() {
+	public List<XMLProduct> getProducts() {
 		return products;
 	}
 	
@@ -82,7 +82,7 @@ public class Order {
 		
 		BigDecimal tot= new BigDecimal(0);
 		
-		for (Product p : products) {
+		for (XMLProduct p : products) {
 			tot = tot.add(p.getPrice().multiply(new BigDecimal(p.getQty_ordered()).multiply(Util.get_aliquota_iva1())));
 		}
 		return tot;
@@ -91,18 +91,18 @@ public class Order {
 	
 	public void addShippingAndFeeProduct() {
 		
-		Product p;
+		XMLProduct p;
 		
 		if (this.shipping_amount != null) {
 			if (this.shipping_amount.compareTo(new BigDecimal(0))!=0) {
-				p = new Product(Ini.getString("prodotto_spedizione"), this.shipping_amount);
+				p = new XMLProduct(Ini.getString("prodotto_spedizione"), this.shipping_amount);
 				this.products.add(p);
 			}
 		}
 		
 		if (this.cod_fee != null) {
 			if (this.cod_fee.compareTo(new BigDecimal(0))!=0) {
-				p = new Product(Ini.getString("prodotto_contrassegno"), this.cod_fee);
+				p = new XMLProduct(Ini.getString("prodotto_contrassegno"), this.cod_fee);
 				this.products.add(p);
 			}
 		}

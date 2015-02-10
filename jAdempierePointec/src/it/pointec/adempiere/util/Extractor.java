@@ -3,6 +3,11 @@ package it.pointec.adempiere.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Classe per il parsing e l'estrazione di string sql
+ * @author cesare
+ *
+ */
 public class Extractor {
 	
 	private String _text;
@@ -17,14 +22,6 @@ public class Extractor {
 		this._pattern = Pattern.compile(_pattern);
 		this._matcher = this._pattern.matcher(this._text);
 		
-		/*int count = 0;
-		while (this._matcher.find())
-			count++;
-		
-		if (count > 1)
-			Util.addError("Numero di occorrenze trovate maggiore di 1 ["+_pattern+"]");
-		
-		this._matcher.reset();*/
 		this._matcher.find();
 		
 	}

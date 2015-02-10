@@ -1,7 +1,7 @@
 package it.pointec.adempiere.acquisti;
 
 import it.pointec.adempiere.Adempiere;
-import it.pointec.adempiere.model.InvoicePassive;
+import it.pointec.adempiere.model.PassiveInvoice;
 import it.pointec.adempiere.util.Extractor;
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
@@ -30,7 +30,8 @@ public class ImportFattureAcquisto {
 	
 	private PreparedStatement _stmt;
 	private PreparedStatement _stmtBP;
-	private List<InvoicePassive> _fatture = new ArrayList<InvoicePassive>();
+	private PreparedStatement _stmtChk;
+	private List<PassiveInvoice> _fatture = new ArrayList<PassiveInvoice>();
 	private String _type;
 	private int _c_doctype_id = 0;
 	private Date dataIva;
@@ -64,7 +65,13 @@ public class ImportFattureAcquisto {
 			
 			_stmt.setInt(18, 1000000);
 			
+			// Statement recupero BP
 			_stmtBP = DB.prepareStatement("select REGEX_POREFERENCE, GROUP_POREFERENCE, REGEX_DATEINVOICED, GROUP_DATEINVOICED, REGEX_GRANDTOTAL, GROUP_GRANDTOTAL, DATE_INVOICE_FORMAT, EXCLUDE, SKU, C_BPARTNER_ID, replace from POINTEC_FORNITORI where cartella = ? and is_active = 'Y'", null);
+			
+			// Statement verifica esistenza fattura
+			_stmtChk = DB.prepareStatement("select count(*) from c_invoice where ad_client_id = ? and ad_org_id = ? and (C_DOCTYPE_ID = 1000005 or C_DOCTYPETARGET_ID = 1000005) and C_BPARTNER_ID = ? and (POREFERENCE = ? or description like ?) and DATEINVOICED = ?", null);
+			_stmtChk.setInt(1, Ini.getInt("ad_client_id"));
+			_stmtChk.setInt(2, Ini.getInt("ad_org_id"));
 			
 			String sql = "select valore from pointec_parametri";
 			String v = DB.getSQLValueString(null, sql);
@@ -87,13 +94,13 @@ public class ImportFattureAcquisto {
 		
 		if (args.length>0)
 			if (args[0].compareTo("true")==0)
-				FileMove.elabora();
+				Archive.elabora();
 		
 		elabora();
 		
 		if (args.length>0)
 			if (args[0].compareTo("true")==0)
-				FileMove.elabora();
+				Archive.elabora();
 
 	}
 	
@@ -198,42 +205,51 @@ public class ImportFattureAcquisto {
 				
 		try {
 			
-			for(InvoicePassive acq : _fatture){
+			for(PassiveInvoice acq : _fatture){
 				
-				n = DB.getSQLValue(null, "select count(*) from c_invoice where ad_client_id = ? and ad_org_id = ? and (C_DOCTYPE_ID = 1000005 or C_DOCTYPETARGET_ID = 1000005) and C_BPARTNER_ID = ? and (POREFERENCE = ? or description like ?)", Ini.getInt("ad_client_id"), Ini.getInt("ad_org_id"), acq.get_c_bpartner_id(), acq.get_poreference(), "%#"+acq.get_poreference());
+				_stmtChk.setInt(3, acq.get_c_bpartner_id());
+				_stmtChk.setString(4, acq.get_poreference());
+				_stmtChk.setString(5, "%#"+acq.get_poreference());
+				_stmtChk.setDate(6, acq.get_dateinvoiced());
 				
-				if (n==0) {
+				ResultSet rs = _stmtChk.executeQuery();
+				if (rs.next()) {
 					
-					Util.setCurrent(acq.get_poreference());
-					id = Util.getNextSequence("i_invoice");
-					
-					_stmt.setInt(4, acq.get_c_doctype_id());
-					//documentno = "FAIMP-"+Util.getNextSequence("AP Invoice - Import");
-					_stmt.setString(5, Integer.toString(id));
-					//_stmt.setNull(5, Types.VARCHAR);
-					_stmt.setDate(10, acq.get_dateinvoiced());
-					
-					_stmt.setDate(11, acq.get_dateinvoiced());
-					
-					_stmt.setString(17, acq.get_fullpath()+"#"+acq.get_poreference());
-					
-					_stmt.setInt(9, acq.get_c_bpartner_id());
-					//System.out.println(acq.get_c_bpartner_id());
-					_stmt.setInt(3, id);
-					
-					_stmt.setString(12, acq.get_sku());
-					_stmt.setInt(13, 1);
-					_stmt.setBigDecimal(14, acq.get_price());
-					_stmt.setBigDecimal(16, acq.get_tax_amount());
-					
-					_stmt.execute();
+					if (rs.getInt(1)==0) {
 						
-					Util.increaseSequence("i_invoice");
-					//Util.increaseSequence("AP Invoice - Import");
+						id = Util.getNextSequence("i_invoice");
+						
+						_stmt.setInt(4, acq.get_c_doctype_id());
+						//documentno = "FAIMP-"+Util.getNextSequence("AP Invoice - Import");
+						_stmt.setString(5, Integer.toString(id));
+						//_stmt.setNull(5, Types.VARCHAR);
+						_stmt.setDate(10, acq.get_dateinvoiced());
+						
+						_stmt.setDate(11, acq.get_dateinvoiced());
+						
+						_stmt.setString(17, acq.get_fullpath()+"#"+acq.get_poreference());
+						
+						_stmt.setInt(9, acq.get_c_bpartner_id());
+						//System.out.println(acq.get_c_bpartner_id());
+						_stmt.setInt(3, id);
+						
+						_stmt.setString(12, acq.get_sku());
+						_stmt.setInt(13, 1);
+						_stmt.setBigDecimal(14, acq.get_price());
+						_stmt.setBigDecimal(16, acq.get_tax_amount());
+						
+						_stmt.execute();
+							
+						Util.increaseSequence("i_invoice");
+						//Util.increaseSequence("AP Invoice - Import");
+					}
+					else {
+						System.out.println("Fattura già presente: ["+acq.get_fullpath()+"]");
+					}
 				}
 				else {
-					System.out.println("Fattura già presente: ["+acq.get_fullpath()+"]");
-				}				
+					Util.addError("Errore nell'eleborazione della fattura ["+acq.get_fullpath()+"]\n");
+				}
 				
 			}
 		}
@@ -278,7 +294,7 @@ public class ImportFattureAcquisto {
 			if (rs.next()) {
 				
 				File[] listOfFiles = d.listFiles();
-				InvoicePassive i;
+				PassiveInvoice i;
 				
 				// Loop fra i file
 				for (File f : listOfFiles) {
@@ -300,13 +316,13 @@ public class ImportFattureAcquisto {
 		
 	}
 	
-	private InvoicePassive extractFromFile(File f, ResultSet rs, File d) throws SQLException, ParseException {
+	private PassiveInvoice extractFromFile(File f, ResultSet rs, File d) throws SQLException, ParseException {
 		
 		String parsedText = "";
 		
 		try {
 		
-			InvoicePassive 	i = new InvoicePassive();
+			PassiveInvoice 	i = new PassiveInvoice();
 			i.set_filename(f.getName());
 			i.set_fullpath(d.getName()+"/"+f.getName());
 			

@@ -5,7 +5,7 @@ import it.pointec.adempiere.util.Ini;
 import java.math.BigDecimal;
 import java.sql.Date;
 
-public class InvoicePassive {
+public class PassiveInvoice {
 
 	private String _filename;
 	private String _fullpath;

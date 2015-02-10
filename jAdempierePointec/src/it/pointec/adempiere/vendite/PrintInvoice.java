@@ -21,6 +21,11 @@ import it.pointec.adempiere.Adempiere;
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
+/**
+ * Elaborazione delle fatture importate in adempiere, generazione del pdf ed invio dello stesso al cliente
+ * @author cesare
+ *
+ */
 public class PrintInvoice {
 	
 	private MPrintFormat format;
@@ -37,26 +42,26 @@ public class PrintInvoice {
 		
 	}
 
+	/**
+	 * Metodo statico per l'esecuzione
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		
 		// Inizializzazione adempiere
 		Adempiere a = new Adempiere();
 		a.inizializza();
 		
-		elabora();
-
-	}
-	
-	public static void elabora() {
-		
 		PrintInvoice p = new PrintInvoice();
 		p.process();
 		
 		Util.printErrorAndExit();
-		
-		
+
 	}
 	
+	/**
+	 * Elaborazione fatture	
+	 */
 	private void process() {
 		
 		try {
@@ -71,7 +76,7 @@ public class PrintInvoice {
 				
 				//System.out.println(rs.getString(1));
 				
-				sendEmail(rs.getInt(1), rs.getString(4));
+				sendEmail(rs.getInt(1), rs.getString(2));
 				//sendEmail(rs.getInt(1), "anpiffer@gmail.com");
 				
 			}
@@ -83,6 +88,11 @@ public class PrintInvoice {
 		
 	}
 	
+	/**
+	 * Invio email al cliente
+	 * @param C_Invoice_ID	ID della fattura da elaborare
+	 * @param to_email	Email a cui inviare la fattura
+	 */
 	private void sendEmail(int C_Invoice_ID, String to_email) {
 		
 		MInvoice i = new MInvoice(Env.getCtx(), C_Invoice_ID, null);

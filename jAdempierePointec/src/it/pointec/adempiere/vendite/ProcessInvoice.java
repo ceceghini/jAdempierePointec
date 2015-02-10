@@ -1,8 +1,10 @@
 package it.pointec.adempiere.vendite;
 
-import it.pointec.adempiere.model.Order;
-import it.pointec.adempiere.model.Orders;
-import it.pointec.adempiere.model.Product;
+import it.pointec.adempiere.Adempiere;
+import it.pointec.adempiere.model.XMLOrder;
+import it.pointec.adempiere.model.XMLOrders;
+import it.pointec.adempiere.model.XMLProduct;
+import it.pointec.adempiere.process.ImportInvoice2;
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
@@ -27,22 +29,25 @@ import org.compiere.util.Trx;
 
 import com.thoughtworks.xstream.XStream;
 
-public class I_Invoice {
+/***
+ * Elaborazione delle Invoice provenienti dall'xml, inserimento nella tabella i_invoice
+ * e successivo import nella tabella c_invoice
+ * @author cesare
+ *
+ */
+public class ProcessInvoice {
 
-	private Hashtable<String, Order> _orders = new Hashtable<String, Order>();
+	private Hashtable<String, XMLOrder> _orders = new Hashtable<String, XMLOrder>();
 	private PreparedStatement _stmt;
-	private I_Product _product;
-	private I_BPartner _bpartner;
-	private String _type;
+	private ProcessProduct _product;
+	private ProcessBPartner _bpartner;
 	
 	private String _first;
 	
-	public I_Invoice(String t) {
+	public ProcessInvoice() {
 		
-		_type = t;
-		
-		_product = new I_Product();
-		_bpartner = new I_BPartner();
+		_product = new ProcessProduct();
+		_bpartner = new ProcessBPartner();
 		
 		try {
 			_stmt = DB.prepareStatement("insert into I_INVOICE (ad_org_id, ad_client_id, i_invoice_id, c_doctype_id, documentno, issotrx, salesrep_id, c_paymentterm_id, C_BPartner_ID, dateinvoiced, dateacct, productvalue, qtyordered, priceactual, c_tax_id, taxamt, description, M_PriceList_ID, vatledgerdate, vatledgerno, poreference) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", null);
@@ -54,8 +59,6 @@ public class I_Invoice {
 			_stmt.setInt(18, Ini.getInt("m_pricelist_version_id"));
 			_stmt.setNull(5, Types.INTEGER);
 			_stmt.setNull(20, Types.INTEGER);
-			
-			// Numeri di documento
 			
 			_first = Ini.getString("first_invoice");	
 			
@@ -103,8 +106,8 @@ public class I_Invoice {
 		//String last = "000003680";
 		
 		try {
-			downloadFromMagento("http://www.lucebrillante.it");
-			downloadFromMagento("http://www.tagliato.it");
+			//downloadFromMagento("http://www.lucebrillante.it");
+			//downloadFromMagento("http://www.tagliato.it");
 			downloadFromMagento("http://www.stampaperfetta.it");
 		}
 		catch (Exception e) {
@@ -132,28 +135,26 @@ public class I_Invoice {
 		
 		// Conversione file xml
 		XStream xstream = new XStream();
-		xstream.processAnnotations(Orders.class);
-		xstream.processAnnotations(Order.class);
-		xstream.processAnnotations(Product.class);
+		xstream.processAnnotations(XMLOrders.class);
+		xstream.processAnnotations(XMLOrder.class);
+		xstream.processAnnotations(XMLProduct.class);
 				
-		Orders orders = (Orders) xstream.fromXML(f);
+		XMLOrders orders = (XMLOrders) xstream.fromXML(f);
 		
 		if (orders.getOrders()==null)
 			return;
 		
 		int n;
 		
-		for (Order o : orders.getOrders()) {
+		for (XMLOrder o : orders.getOrders()) {
 			
 			n = DB.getSQLValue(null, "select count(poreference) from c_invoice where poreference = ?", o.getOrder_id());
 			
 			if (n==0) {
 				_bpartner.addBPartner(o.getBp());
 				
-				Util.setCurrent(o.getOrder_id());
-				
 				// Loop sui prodotti ordinati
-				for (Product p : o.getProducts()) {
+				for (XMLProduct p : o.getProducts()) {
 					
 					_product.addProduct(p);
 					
@@ -166,9 +167,12 @@ public class I_Invoice {
 		
 	}
 	
+	/**
+	 * Verifica congruenza dei dati scaricati
+	 */
 	public void Check() {
 		
-		Order o;
+		XMLOrder o;
 		
 		for(String k : _orders.keySet()){
 			
@@ -193,9 +197,12 @@ public class I_Invoice {
 		
 	}
 	
+	/**
+	 * Importazione dei dati nella tabella i_invoice
+	 */
 	private void importIntoAdempiere() {
 		
-		Order o;
+		XMLOrder o;
 		MBPartner bp;
 		int bpId;
 		int id;
@@ -207,15 +214,11 @@ public class I_Invoice {
 				o = _orders.get(k);
 				o.addShippingAndFeeProduct();
 				
-				Util.setCurrent(o.getOrder_id());
-				
 				if (o.getBp().getIs_business_address()==1)
 					_stmt.setInt(4, Ini.getInt("doc_type_id_invoice"));
 				else
 					_stmt.setInt(4, Ini.getInt("doc_type_id_corrispettivo"));
 				
-				//_stmt.setString(5, o.getIncrement_id());	// Numero fattura
-				//_stmt.setString(20, o.getIncrement_id());	// Protocollo IVA
 				_stmt.setDate(10, o.getCreated_at());	
 				_stmt.setDate(11, o.getCreated_at());	// Data fattura
 				_stmt.setDate(19, o.getCreated_at());	// Data iva
@@ -250,6 +253,8 @@ public class I_Invoice {
 					_stmt.setInt(8, Ini.getInt("paymenttem_paypal"));
 				else if (o.getPayment_method().compareTo("bankpayment")==0)
 					_stmt.setInt(8, Ini.getInt("paymenttem_banca"));
+				else if (o.getPayment_method().compareTo("banktransfer")==0)
+					_stmt.setInt(8, Ini.getInt("paymenttem_banca"));
 				else if (o.getPayment_method().compareTo("amazon")==0)
 					_stmt.setInt(8, Ini.getInt("paymenttem_amazon"));
 				else
@@ -258,10 +263,8 @@ public class I_Invoice {
 				
 				// Loop fra i prodotti
 				
-				for (Product p : o.getProducts()) {
+				for (XMLProduct p : o.getProducts()) {
 				
-					Util.setCurrent(o.getOrder_id()+"#"+p.getSku());
-					
 					// Inserimento prodotti nella tabella di import
 					id = Util.getNextSequence("i_invoice");
 					_stmt.setInt(3, id);
@@ -285,11 +288,13 @@ public class I_Invoice {
 		
 	}
 	
+	/***
+	 * Chiamata al processo adempiere che effettua l'import delle fatture
+	 */
 	private void process() {
 		
 		try {
 			
-			// Importazione prodotti
 			String trxName = "processInvoice";
 			
 			int AD_Process_ID =  MProcess.getProcess_ID("Import_Invoice", trxName);
@@ -301,7 +306,6 @@ public class I_Invoice {
 	        pi.setAD_PInstance_ID (instance.getAD_PInstance_ID());
 	        pi.setAD_Client_ID(Env.getAD_Client_ID(Env.getCtx()));
 	
-	        //  Add Parameters
 	        MPInstancePara para = new MPInstancePara(instance, 10);
 	        para.setParameter("AD_Client_ID", Ini.getInt("ad_client_id"));
 	        para.saveEx();
@@ -345,6 +349,9 @@ public class I_Invoice {
 		
 	}
 	
+	/**
+	 * Verifiche ed aggiornamenti da effettuarsi post inserimento
+	 */
 	private void postProcess() {
 		
 		try {
@@ -353,7 +360,7 @@ public class I_Invoice {
 			stmt.setInt(1, Ini.getInt("paymenttem_amazon"));
 			stmt.setInt(2, Ini.getInt("bankaccount_amazon"));
 			stmt.setInt(3, Ini.getInt("doc_type_id_invoice"));
-			stmt.setInt(3, Ini.getInt("doc_type_id_corrispettivo"));
+			stmt.setInt(4, Ini.getInt("doc_type_id_corrispettivo"));
 			stmt.executeUpdate();
 			
 			stmt.setInt(1, Ini.getInt("paymenttem_contrassegno"));
@@ -375,6 +382,9 @@ public class I_Invoice {
 		
 	}
 	
+	/**
+	 * Chiamata alle varie procedure di inserimento dei prodotti, bpartner e invoice
+	 */
 	public void importAndProcess() {
 		
 		if (Ini.istrue("import_product")) {
@@ -403,5 +413,33 @@ public class I_Invoice {
 			postProcess();
 			Util.printErrorAndExit();
 		}
+	}
+	
+	/**
+	 * Metodo statico per l'esecuzione
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		// Inizializzazione adempiere
+		Adempiere a = new Adempiere();
+		a.inizializza();
+		
+		// Fatture
+		System.out.println("INIZIO ELABORAZIONE INVOICE");
+		ProcessInvoice o = new ProcessInvoice();
+		
+		o.initialCheck();
+		Util.printErrorAndExit();
+		
+		o.downloadOrder();
+		Util.printErrorAndExit();
+		
+		o.Check();
+		Util.printErrorAndExit();
+		
+		o.importAndProcess();
+		Util.printErrorAndExit();
+		
 	}
 }

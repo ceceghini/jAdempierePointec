@@ -7,7 +7,7 @@ import com.thoughtworks.xstream.annotations.XStreamConverter;
 import it.pointec.adempiere.converter.IntConverter;
 import it.pointec.adempiere.util.Ini;
 
-public class Product {
+public class XMLProduct {
 
 	private String sku;
 	
@@ -20,7 +20,7 @@ public class Product {
 	
 	private int m_product_category_id;
 	
-	public Product(String _sku, BigDecimal _price) {
+	public XMLProduct(String _sku, BigDecimal _price) {
 		
 		sku = _sku;
 		price = _price;

@@ -1,6 +1,6 @@
 package it.pointec.adempiere.model;
 
-public class BPartner {
+public class XMLBPartner {
 
 	private String taxcode;
 	private String vatnumber;

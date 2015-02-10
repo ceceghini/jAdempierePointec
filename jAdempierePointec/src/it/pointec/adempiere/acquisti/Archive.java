@@ -2,6 +2,7 @@ package it.pointec.adempiere.acquisti;
 
 import java.awt.Color;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +12,7 @@ import org.compiere.model.MInvoice;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
+import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfReader;
@@ -22,7 +24,7 @@ import it.pointec.adempiere.util.Util;
 
 
 
-public class FileMove {
+public class Archive {
 
 	public static void main(String[] args) {
 		
@@ -38,9 +40,9 @@ public class FileMove {
 		
 		// Elaborazione fatture inserite
 		setPoReference();
-		//Util.printErrorAndExit();
+		Util.printErrorAndExit();
 		
-		Archive();
+		process();
 		Util.printErrorAndExit();
 		
 		finalCheck();
@@ -109,7 +111,7 @@ public class FileMove {
 		
 	}
 	
-	private static void Archive() {
+	private static void process() {
 		
 		try {
 			
@@ -126,13 +128,14 @@ public class FileMove {
 			rs.close();
 			stmt.close();
 			
-			stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?) and description like 'daarchiviare%' and vatledgerdate <= ?", null);
+			stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and description like 'daarchiviare%' and vatledgerdate <= ?", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
 			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
 			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
 			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
-			stmt.setDate(6, date);
+			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
+			stmt.setDate(7, date);
 			
 			//System.out.println(date.toString());
 						
@@ -145,10 +148,7 @@ public class FileMove {
 			MBPartner b;
 			String nomeFileSource;
 			String nomeFileDest;
-			PdfContentByte content;
-			PdfReader pdfReader;
-			PdfStamper pdfStamper;
-			BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
+			String description;
 						
 			while (rs.next()) {
 			
@@ -170,7 +170,9 @@ public class FileMove {
 				
 				if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
 					
-					i.setDescription("archiviati\n"+nomeFileDest);
+					description = "archiviati\n"+nomeFileDest;
+					
+					i.setDescription(description);
 					
 					System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
 					
@@ -178,29 +180,7 @@ public class FileMove {
 					source = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_archiviati";
 					dest = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_dastampare";
 					
-					pdfReader = new PdfReader(source+"/"+nomeFileDest);
-			        
-			        pdfStamper = new PdfStamper(pdfReader,
-		                    new FileOutputStream(dest+"/"+nomeFileDest));
-			        
-			        // Testo
-			        content = pdfStamper.getOverContent(1);
-			        content.beginText();
-	                content.setFontAndSize(bf, 15);
-	                content.setColorFill(Color.RED);
-	                content.setColorStroke(Color.RED);
-	                content.setLineWidth(1);
-	                content.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_FILL_STROKE);
-			        content.showTextAligned(PdfContentByte.ALIGN_LEFT
-			        		,"### Data protocollo: " +
-			        		 i.get_ValueAsString("vatledgerdate").substring(0, 10) + " - " +
-			        		 "N. protocollo: " +
-			        		 i.get_ValueAsString("vatledgerno") + " ###"
-			        		,10,10,0);
-			        content.endText();
-			        
-	                pdfStamper.close();
-					// Fine
+					createPdf(source+"/"+nomeFileDest, dest+"/"+nomeFileDest, i);
 				
 					i.save();
 					
@@ -256,91 +236,32 @@ public class FileMove {
 		
 	}
 	
-	
-	/*private static void prepareForPrint() {
+	public static void createPdf (String from, String to, MInvoice i) throws DocumentException, IOException {
 		
-		try {
-			
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?) and description like 'archiviati%' and vatledgerdate < ?", null);
-			stmt.setInt(1, Ini.getInt("ad_client_id"));
-			stmt.setInt(2, Ini.getInt("ad_org_id"));
-			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
-			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
-			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
-			
-			java.util.Date d = new java.util.Date();
-			Calendar c = Calendar.getInstance();
-			c.setTime(d);
-			c.set(Calendar.DAY_OF_MONTH, 1);
-			c.add(Calendar.MONTH, -3);
-			
-			Date date = new Date (c.getTimeInMillis());
-			
-			stmt.setDate(6, date);
-			
-			//System.out.println(date.toString());
-						
-			ResultSet rs = stmt.executeQuery();
-			
-			String fromPath = Ini.getString("fattureacquisto_start");
-			String source;
-			String dest;
-			MInvoice i;
-			MBPartner b;
-			
-			String nomeFileSource;
-			String nomeFileDest;
-			String[] a;
-			PdfContentByte content;
-			
-			BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
-			while (rs.next()) {
-			
-				i = MInvoice.get(Env.getCtx(), rs.getInt(1));
-				
-				nomeFileSource = i.getDescription().split("\n")[1];
-				nomeFileDest = nomeFileSource;
-				
-				source = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_archiviati";
-				dest = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_dastampare";
-				
-				// Overlay pdf image
-				System.out.println("Elaborazione file: "+nomeFileSource);
-		        PdfReader pdfReader = new PdfReader(source+"/"+nomeFileSource);
-		        
-		        PdfStamper pdfStamper = new PdfStamper(pdfReader,
-	                    new FileOutputStream(dest+"/"+nomeFileDest));
-		        
-		        // Testo
-		        
-		        content = pdfStamper.getOverContent(1);
-		        content.beginText();
-                content.setFontAndSize(bf, 15);
-                content.setColorFill(Color.RED);
-                content.setColorStroke(Color.RED);
-                content.setLineWidth(1);
-                content.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_FILL_STROKE);
-		        content.showTextAligned(PdfContentByte.ALIGN_LEFT
-		        		,"### Data protocollo: " +
-		        		 i.get_ValueAsString("vatledgerdate").substring(0, 10) + " - " +
-		        		 "N. protocollo: " +
-		        		 i.get_ValueAsString("vatledgerno") + " ###"
-		        		,10,10,0);
-		        content.endText();
-		        
-                pdfStamper.close();
-		        
-				//System.out.println(source + "][" + dest + "][" + nomeFileSource + "][" + nomeFileDest);
-				
-				
-								
-			}			
-			
-		}
-		catch (Exception e) {
-			Util.addError(e);
-		}
+		BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
 		
-	}*/
+		PdfReader pdfReader = new PdfReader(from);
+        
+		PdfStamper pdfStamper = new PdfStamper(pdfReader,new FileOutputStream(to));
+        
+        // Testo
+		PdfContentByte content = pdfStamper.getOverContent(1);
+        content.beginText();
+        content.setFontAndSize(bf, 15);
+        content.setColorFill(Color.RED);
+        content.setColorStroke(Color.RED);
+        content.setLineWidth(1);
+        content.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_FILL_STROKE);
+        content.showTextAligned(PdfContentByte.ALIGN_LEFT
+        		,"### Data protocollo: " +
+        		 i.get_ValueAsString("vatledgerdate").substring(0, 10) + " - " +
+        		 "N. protocollo: " +
+        		 i.get_ValueAsString("vatledgerno") + " ###"
+        		,10,10,0);
+        content.endText();
+        
+        pdfStamper.close();
+		
+	}
 	
 }

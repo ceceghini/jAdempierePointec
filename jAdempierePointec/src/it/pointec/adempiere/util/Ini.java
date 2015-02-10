@@ -4,6 +4,11 @@ import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.Properties;
 
+/**
+ * Classe di utilita per la gestione del file ini
+ * @author cesare
+ *
+ */
 public class Ini {
 	
 	private static Properties p = new Properties();

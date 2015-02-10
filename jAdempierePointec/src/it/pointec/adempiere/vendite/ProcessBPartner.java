@@ -1,6 +1,6 @@
 package it.pointec.adempiere.vendite;
 
-import it.pointec.adempiere.model.BPartner;
+import it.pointec.adempiere.model.XMLBPartner;
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
@@ -18,12 +18,18 @@ import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 
-public class I_BPartner {
+/**
+ * Elaborazione dei bpartner provenienti dal file xml, inserimento nella tabella i_bpartner
+ * e successivo import nella tabella c_bpartner
+ * @author cesare
+ *
+ */
+public class ProcessBPartner {
 
 	private PreparedStatement _stmt;
-	private Hashtable<String, BPartner> _bpartners = new Hashtable<String, BPartner>();	
+	private Hashtable<String, XMLBPartner> _bpartners = new Hashtable<String, XMLBPartner>();	
 	
-	public I_BPartner() {
+	public ProcessBPartner() {
 		
 		try {
 			_stmt = DB.prepareStatement("insert into I_BPARTNER (ad_org_id, ad_client_id, i_bpartner_id, value, name, taxid, c_bp_group_id, address1, postal, city, regionname, countrycode, contactname, phone, email, iscustomer, isvendor, ad_language, fiscalcode) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", null);
@@ -46,13 +52,12 @@ public class I_BPartner {
 	}
 	
 	/**
-	 * Elaborazione prodotti presenti nelle tabelle di import
+	 * Chiamata al processo adempiere per importare i dati nella tabella c_bpartner
 	 */
 	public void process() {
 		
 		try {
 			
-			// Importazione prodotti
 			String trxName = "processBPartner";
 			
 			int AD_Process_ID =  MProcess.getProcess_ID("Import_BPartner", trxName);
@@ -64,7 +69,6 @@ public class I_BPartner {
 	        pi.setAD_PInstance_ID (instance.getAD_PInstance_ID());
 	        pi.setAD_Client_ID(Env.getAD_Client_ID(Env.getCtx()));
 	
-	        //  Add Parameters
 	        MPInstancePara para20 = new MPInstancePara(instance, 20);
 	        para20.setParameter("AD_Client_ID", Ini.getInt("ad_client_id"));
 	        para20.saveEx();
@@ -73,7 +77,6 @@ public class I_BPartner {
 	        
 	        process.startProcess(Env.getCtx(), pi, Trx.get(trxName, false));     
 	
-	        //Verifica importazione
 	        String sql = "select i_bpartner_id, i_errormsg, value  from i_bpartner where i_isimported <> 'Y'";
 			PreparedStatement pstmt = DB.prepareStatement(sql, null);
 			ResultSet rs = pstmt.executeQuery();
@@ -97,11 +100,11 @@ public class I_BPartner {
 	}
 	
 	/**
-	 * Inserimento dei bparntner nelle tabelle di importo di adempiere
+	 * Inserimento dei bparntner nelle tabella i_bpartner
 	 */
 	public void importIntoAdempiere() {
 		
-		BPartner b;
+		XMLBPartner b;
 		int id;
 		String contactName;
 		
@@ -110,8 +113,6 @@ public class I_BPartner {
 			for(String k : _bpartners.keySet()){
 				
 				b = _bpartners.get(k);
-				
-				Util.setCurrent(b.getCustomer_id());
 				
 				// Inserimento prodotti nella tabella di import
 				id = Util.getNextSequence("i_bpartner");
@@ -154,8 +155,6 @@ public class I_BPartner {
 				
 			}
 		
-			Util.setCurrent(null);
-			
 			// Elimino i db doppi sulla base delle email
 			StringBuffer sql;
 			sql = new StringBuffer ("delete from I_BPARTNER a "
@@ -235,33 +234,11 @@ public class I_BPartner {
 		
 	}
 	
-	public void test() {
-		
-		BPartner b;
-		
-		try {
-		
-			for(String k : _bpartners.keySet()){
-				
-				b = _bpartners.get(k);
-				
-				if (b.getTaxcode()==null)
-					System.out.println(b.getTaxcode2());
-				
-			}
-			
-		}
-		catch (Exception e) {
-			Util.addError(e);
-		}
-		
-	}
-	
 	/**
 	 * Aggiunta di un bpartner alla lista dei bpartners da importare
 	 * @param p
 	 */
-	public void addBPartner(BPartner b) {
+	public void addBPartner(XMLBPartner b) {
 		
 		if (!_bpartners.containsKey(b.getValue())) {
 			_bpartners.put(b.getValue(), b);

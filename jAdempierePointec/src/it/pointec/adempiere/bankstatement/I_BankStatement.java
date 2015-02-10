@@ -5,6 +5,7 @@ import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -142,7 +143,7 @@ public class I_BankStatement {
 						
 						Util.printErrorAndExit();
 						
-						Util.Elaborato(_source.get_subpath(), listOfFiles[i].getName(), bs_name);
+						FileElaborato(_source.get_subpath(), listOfFiles[i].getName(), bs_name);
 						
 						Util.printErrorAndExit();
 						 
@@ -202,6 +203,37 @@ public class I_BankStatement {
 		Util.increaseSequence("i_bankstatement");
 		
 	}
-	
+
+	public static void FileElaborato(String subPath, String file, String bs_name) throws IOException {
+		
+		if (Util.HasError())
+			return;
+		
+		String source = Ini.getString("filepath") + "/" + subPath + "/" + file;
+		
+		File f_source = new File(source);
+
+		if (!f_source.exists())
+			return;
+		
+		// file destinazione
+		//long lastModified = f_source.lastModified();
+		//Date date = new Date(lastModified);
+		
+		String dest = Ini.getString("filepath_elaborati") + "/" + subPath;
+		
+		File d_dest = new File(dest);
+		
+		if (!d_dest.exists())
+			d_dest.mkdir();
+		
+		
+		dest = Ini.getString("filepath_elaborati") + "/" + subPath + "/" + bs_name;
+		
+		File f_dest = new File(dest);
+		
+		f_source.renameTo(f_dest);
+		
+	}
 	
 }
