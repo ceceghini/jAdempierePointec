@@ -1,12 +1,12 @@
 package it.pointec.adempiere.bankstatement;
 
+import it.pointec.adempiere.util.Util;
+
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.compiere.util.DB;
@@ -19,7 +19,7 @@ import com.paypal.soap.api.PaymentTransactionSearchResultType;
 import com.paypal.soap.api.TransactionSearchRequestType;
 import com.paypal.soap.api.TransactionSearchResponseType;
 
-public class Paypal_Base implements I_I_BankStatement_Source {
+public class Paypal_Base extends I_BankStatement implements I_Source {
 
 	private String _name;
 	private int _c_bankaccount_id;
@@ -51,17 +51,7 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 	}
 
 	@Override
-	public boolean has_c_charge_id() {
-		return true;
-	}
-
-	@Override
-	public String get_name() {
-		return _name;
-	}
-
-	@Override
-	public String insertIntoAdempiere(String file, I_BankStatement bs) throws Exception {
+	public void insertIntoAdempiere(String file) throws Exception {
 		
 		PreparedStatement stmt = DB.prepareStatement("select max(EFTSTATEMENTLINEDATE) as maxd from c_bankstatementline l join c_bankstatement b on l.C_BANKSTATEMENT_ID = b.C_BANKSTATEMENT_ID and b.c_bankaccount_id = ?", null);
 		stmt.setInt(1, _c_bankaccount_id);
@@ -90,7 +80,7 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 			curMonth=12;
 		
 		if(curMonth-lastMonth<=1)
-			return "";
+			return;
 		
 		Calendar d = Calendar.getInstance();
 		d.setTime(last.getTime());
@@ -110,7 +100,7 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 		
 		while (curDay2 <= lastDay2) {
 			
-			getPaypalAndInsert(d, bs);
+			getPaypalAndInsert(d);
 			
 			d.add(Calendar.DATE, 1);
 			
@@ -119,16 +109,12 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 		
 		stmt.close();
 		
-		return "";
-		
 	}
 	
-	private void getPaypalAndInsert(Calendar d, I_BankStatement bs) throws PayPalException, SQLException {
+	private void getPaypalAndInsert(Calendar d) throws PayPalException, SQLException {
 		
 		I_BankStatement_Line line;
-		DateFormat dateFormat;
-		String bs_name = null;
-				
+						
 		CallerServices caller = new CallerServices();
 		APIProfile profile = ProfileFactory.createSignatureAPIProfile();
 		
@@ -169,10 +155,7 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 					line.set_charge_amount(new BigDecimal(ts[i].getFeeAmount().get_value()));
 					line.set_description(ts[i].getPayerDisplayName() + " - " + ts[i].getStatus() + " - " + ts[i].getType() + " - " + ts[i].getPayer());
 					
-					dateFormat = new SimpleDateFormat("yyyy-MM");
-					bs_name = _name + " [" + dateFormat.format(line.get_date()) + "]";
-					
-					bs.insertLineIntoAdempiere(line, bs_name);
+					super.insertLineIntoAdempiere(line);
 					
 				}
 				
@@ -186,13 +169,54 @@ public class Paypal_Base implements I_I_BankStatement_Source {
 		
 	}
 
-	@Override
-	public boolean is_from_file() {
-		return false;
+	public void importIntoAdempiere() {
+		
+		try {
+			
+			// Verifica se ci sono dati nella tabella di importazione
+			int n = DB.getSQLValue(null, "select count(*) n from i_bankstatement");
+			
+			if (n>0) {
+				Util.addError("Record esistenti nella tabella i_bankstatement");
+				return;
+			}
+			
+			super.initialize();
+			insertIntoAdempiere("");
+				
+			Util.printErrorAndExit();
+				
+			super.process();
+				
+			Util.printErrorAndExit();
+				
+			
+
+		}
+		catch (Exception e) {
+			Util.addError(e);
+		}
+		
 	}
 
 	@Override
 	public String get_subpath() {
 		return null;
 	}
+
+	@Override
+	public String get_extension() {
+		return null;
+	}
+
+	@Override
+	public String get_name() {
+		return _name;
+	}
+
+	@Override
+	public String get_dateformat() {
+		return "yyyy-MM";
+	}
+	
 }

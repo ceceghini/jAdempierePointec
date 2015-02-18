@@ -4,22 +4,21 @@ import it.pointec.adempiere.util.Util;
 
 import java.io.FileInputStream;
 import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
 
-public class CartaIW implements I_I_BankStatement_Source {
+public class CartaIW extends I_BankStatement implements I_Source {
 
 	private final String _subpath = "cartaiw";
-	private final String _name = "CARTAIW [*5672]";
+	private final String _name = "CARTAIW [5672]";
 	private final int _c_bankaccount_id = 1000000;
+	private final String _extension = "pdf";
 	
 	@Override
-	public String insertIntoAdempiere(String file, I_BankStatement bs) throws Exception {
+	public void insertIntoAdempiere(String file) throws Exception {
 		
 		I_BankStatement_Line line;
 		
@@ -40,8 +39,7 @@ public class CartaIW implements I_I_BankStatement_Source {
         
         String[] lines = parsedText.substring(n1+88, n2).split("\n");
         String[] items;
-		String bs_name = null;
-        
+		        
         for (String riga:lines) {
         	
         	items = riga.split(" ");
@@ -52,15 +50,9 @@ public class CartaIW implements I_I_BankStatement_Source {
 			line.set_gross_amount(Util.getImporto(items[items.length-1]).multiply(new BigDecimal(-1)));
 			line.set_description(riga.substring(22, riga.length()).replaceAll(items[items.length-1], "").trim());
 			
-			if (bs_name==null) {
-				DateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
-				bs_name = _name + " [" + dateFormat.format(line.get_date()) + "]";
-			}
-			
-			bs.insertLineIntoAdempiere(line, bs_name);
+			super.insertLineIntoAdempiere(line);
         	
         }
-	    return bs_name;
 		
 	}
 
@@ -78,20 +70,20 @@ public class CartaIW implements I_I_BankStatement_Source {
 	public int get_c_charge_id() {
 		return 0;
 	}
-
-	@Override
-	public boolean has_c_charge_id() {
-		return false;
-	}
-
+	
 	@Override
 	public String get_name() {
 		return _name;
 	}
 
 	@Override
-	public boolean is_from_file() {
-		return true;
+	public String get_extension() {
+		return _extension;
+	}
+
+	@Override
+	public String get_dateformat() {
+		return "yyyy-MM";
 	}
 	
 }

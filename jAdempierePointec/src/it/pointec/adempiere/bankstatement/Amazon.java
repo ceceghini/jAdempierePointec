@@ -1,16 +1,17 @@
 package it.pointec.adempiere.bankstatement;
 
 import java.io.FileReader;
-import java.sql.Date;
 import java.util.HashMap;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-public class Amazon implements I_I_BankStatement_Source {
+public class Amazon extends I_BankStatement implements I_Source {
 
 	private final String _subpath = "amazon";
 	private final String _name = "AMAZON";
 	private final int _c_bankaccount_id = 1000001;
+	private final int _c_charge_id = 1000001;
+	private final String _extension = ".csv";
 	
 	@Override
 	public int get_c_bankaccount_id() {
@@ -19,40 +20,21 @@ public class Amazon implements I_I_BankStatement_Source {
 
 	@Override
 	public int get_c_charge_id() {
-		return 1000001;
-	}
-
-	@Override
-	public boolean has_c_charge_id() {
-		return true;
-	}
-
-	@Override
-	public String get_name() {
-		return _name;
-	}
-
-	@Override
-	public boolean is_from_file() {
-		return true;
+		return _c_charge_id;
 	}
 
 	@Override
 	public String get_subpath() {
 		return _subpath;
 	}
-
+	
 	@Override
-	public String insertIntoAdempiere(String file, I_BankStatement bs) throws Exception {
+	public void insertIntoAdempiere(String file) throws Exception {
 		
 		CSVReader reader = new CSVReader(new FileReader(file), '\t');
 		String [] data;
-		I_BankStatement_Line line;
 		AmazonOrder o;
 		HashMap<String, AmazonOrder> h = new HashMap<String, AmazonOrder>();
-		
-		Date first = null;
-		Date last = null;
 		
 		while ((data = reader.readNext()) != null) {
 			
@@ -69,21 +51,6 @@ public class Amazon implements I_I_BankStatement_Source {
 						h.put(data[1], o);
 					}
 					
-					// Date
-					if (first==null)
-						first=o.get_Date();
-					else {
-						if (first.compareTo(o.get_Date())>0)
-							first=o.get_Date();
-					}
-					
-					if (last==null)
-						last=o.get_Date();
-					else {
-						if (last.compareTo(o.get_Date())<0)
-							last=o.get_Date();
-					}
-					
 				}
 				
 			}
@@ -92,7 +59,7 @@ public class Amazon implements I_I_BankStatement_Source {
 		
 		reader.close();
 		
-		String bs_name = _name + "[" + first + " - " + last + "]";
+		I_BankStatement_Line line;
 		
 		// Loop tra gli ordini amazon appena elaborati
 		for(String k : h.keySet()){
@@ -106,12 +73,25 @@ public class Amazon implements I_I_BankStatement_Source {
 			line.set_gross_amount(o.getGross_amt());
 			line.set_trxid(o.get_order());
 			
-			bs.insertLineIntoAdempiere(line, bs_name);
+			super.insertLineIntoAdempiere(line);
 			
 		}
 		
-		return bs_name;
-		
+	}
+
+	@Override
+	public String get_extension() {
+		return _extension;
+	}
+
+	@Override
+	public String get_name() {
+		return _name;
+	}
+
+	@Override
+	public String get_dateformat() {
+		return "yyyy-MM";
 	}
 
 }

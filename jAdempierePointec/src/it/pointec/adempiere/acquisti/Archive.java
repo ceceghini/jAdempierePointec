@@ -57,18 +57,19 @@ public class Archive {
 	private static void setPoReference() {
 		
 		try {
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?) and description not like 'daarchiviare%' and description not like 'archiviati%'", null);
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and description not like 'daarchiviare%' and description not like 'archiviati%'", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
 			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
 			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
 			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
+			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
 			
 			ResultSet rs = stmt.executeQuery();
 			MInvoice i;
 			String nomeFile;
 			
-			String fromPath = Ini.getString("fattureacquisto_start");
+			//String fromPath = Ini.getString("fattureacquisto_start");
 			String source;
 			String dest;
 			String[] a;
@@ -77,6 +78,9 @@ public class Archive {
 				
 				i = MInvoice.get(Env.getCtx(), rs.getInt(1));
 				
+				source = Util.getDaElaborare(i.getC_DocType_ID());
+				dest = Util.getDaArchiviare(i.getC_DocType_ID());
+				
 				if (i.getPOReference()==null) {
 					a = i.getDescription().split("#");
 					nomeFile = a[0];
@@ -84,14 +88,8 @@ public class Archive {
 				}
 				else {
 					nomeFile = i.getDescription();
-				}
+				}				
 				
-				if (!nomeFile.contains("/"))
-					nomeFile = "altri/" + nomeFile;
-				
-				source = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID());
-				dest = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_daarchiviare";
-								
 				if (Util.moveFile(source, dest, nomeFile, nomeFile)) {
 					
 					i.setDescription("daarchiviare\n"+nomeFile);
@@ -141,7 +139,6 @@ public class Archive {
 						
 			rs = stmt.executeQuery();
 			
-			String fromPath = Ini.getString("fattureacquisto_start");
 			String source;
 			String dest;
 			MInvoice i;
@@ -153,20 +150,23 @@ public class Archive {
 			while (rs.next()) {
 			
 				i = MInvoice.get(Env.getCtx(), rs.getInt(1));
+				b = MBPartner.get(Env.getCtx(), i.getC_BPartner_ID());
 				
 				nomeFileSource = i.getDescription().split("\n")[1];
 				
-				source = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_daarchiviare";
-				dest = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_archiviati";
-				b = MBPartner.get(Env.getCtx(), i.getC_BPartner_ID());
+				source = Util.getDaArchiviare(i.getC_DocType_ID());
+				dest = Util.getArchivio(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
 				
-				nomeFileDest = i.get_ValueAsString("vatledgerdate").substring(0, 4)+"/";
-				nomeFileDest += "[" + i.get_ValueAsString("vatledgerno")+"]-";
+				//nomeFileDest = i.get_ValueAsString("vatledgerdate").substring(0, 4)+"/";
+				nomeFileDest = "[" + i.get_ValueAsString("vatledgerno")+"]-";
 				nomeFileDest += "[" + i.get_ValueAsString("vatledgerdate").substring(0, 10)+"]---";
 				nomeFileDest += "[" + b.get_ValueAsString("name").replaceAll("[^a-zA-Z0-9]", "_") + "]-";
 				nomeFileDest += "[" + i.get_ValueAsString("dateinvoiced").substring(0, 10)+"]-";
 				nomeFileDest += "[" + i.get_ValueAsString("poreference").replaceAll("[^a-zA-Z0-9]", "_")+"]";
 				nomeFileDest += ".pdf";
+				
+				//System.out.println(source);
+				//System.out.println(dest);
 				
 				if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
 					
@@ -177,8 +177,8 @@ public class Archive {
 					System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
 					
 					// Timbro
-					source = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_archiviati";
-					dest = fromPath + "/" + Util.doctypeidToPath(i.getC_DocType_ID()) + "_dastampare";
+					source = dest;
+					dest = Util.getDaStampare(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
 					
 					createPdf(source+"/"+nomeFileDest, dest+"/"+nomeFileDest, i);
 				
@@ -208,12 +208,13 @@ public class Archive {
 			
 			
 			
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?) and nvl(description, '#') not like 'daarchiviare%' and nvl(description, '#') not like 'archiviati%'", null);
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and nvl(description, '#') not like 'daarchiviare%' and nvl(description, '#') not like 'archiviati%'", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
 			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
 			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
 			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
+			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
 			
 			ResultSet rs = stmt.executeQuery();
 			

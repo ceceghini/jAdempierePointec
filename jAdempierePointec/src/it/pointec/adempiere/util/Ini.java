@@ -29,6 +29,13 @@ public class Ini {
 	public static int getInt(String key) {
 		return Integer.parseInt(p.getProperty(key));
 	}
+	
+	public static boolean getBoolean(String key) {
+		if (Integer.parseInt(p.getProperty(key))==1)
+			return true;
+		else
+			return false;
+	}
 
 	public static String getString(String key) {
 		return p.getProperty(key);

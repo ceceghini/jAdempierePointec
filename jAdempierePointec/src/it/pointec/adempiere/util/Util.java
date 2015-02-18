@@ -279,22 +279,63 @@ public class Util {
 	 * @param c_doctype_id
 	 * @return
 	 */
-	public static String doctypeidToPath(int c_doctype_id) {
+	/*public static String doctypeidToPath(int c_doctype_id, String type) {
 		
-		if (c_doctype_id == Ini.getInt("doc_type_id_invoice_acq"))
-			return "fornitori";
+		return Ini.getString(type) + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
 		
-		if (c_doctype_id == Ini.getInt("doc_type_id_invoice_intra"))
-			return "fornitori_intra";
+		//return Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+	}*/
+	
+	/*public static String getPath(String type) {
 		
-		if (c_doctype_id == Ini.getInt("doc_type_id_creditmemo_acq"))
-			return "fornitori";
-		
-		
-		
-		return "";
+		return Ini.getString(type) + "/";
 		
 	}
+	
+	public static String getPathByType(int c_doctype_id) {
+		
+		return Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		
+	}*/
+	
+	public static String getDaElaborare(int c_doctype_id) {
+		
+		return getDaElaborare("fatture_" + Integer.toString(c_doctype_id));
+		//return Ini.getString("daelaborare") + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		
+	}
+	
+	public static String getDaElaborare(String type) {
+		
+		return Ini.getString("daelaborare") + "/" + Ini.getString(type);
+		
+	}
+	
+	public static String getDaArchiviare(int c_doctype_id) {
+		
+		return Ini.getString("daarchiviare") + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		
+	}
+	
+	public static String getArchivio(int c_doctype_id, String year) {
+		
+		return getArchivio("fatture_" + Integer.toString(c_doctype_id), year);
+		//return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		
+	}
+	
+	public static String getArchivio(String type, String year) {
+		
+		return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString(type);
+		
+	}
+	
+	public static String getDaStampare(int c_doctype_id, String year) {
+		
+		return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id)) + " PER STAMPA";
+		
+	}
+	
 	
 	/**
 	 * Recupero aliquota iva

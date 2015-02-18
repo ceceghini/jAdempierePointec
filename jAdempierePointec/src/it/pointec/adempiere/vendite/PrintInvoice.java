@@ -32,13 +32,18 @@ public class PrintInvoice {
 	private MProcess process;
 	private MClient client;
 	private MMailText mText;
+	private boolean override;
+	private String year;
 	
-	private PrintInvoice() {
+	public PrintInvoice() {
 		
 		client = MClient.get(Env.getCtx());
 		format = MPrintFormat.get (Env.getCtx(), 1000010, false);
 		process = MProcess.get (Env.getCtx(), format.getJasperProcess_ID());
 		mText = new MMailText(Env.getCtx(), Ini.getInt("r_mailtext_id"), null);
+		
+		override = Ini.getBoolean("generate_invoice_override");
+		year = Ini.getString("generate_invoice_year");
 		
 	}
 
@@ -53,8 +58,8 @@ public class PrintInvoice {
 		a.inizializza();
 		
 		PrintInvoice p = new PrintInvoice();
-		p.process();
-		
+		p.sendInvoiceEmail();
+				
 		Util.printErrorAndExit();
 
 	}
@@ -62,7 +67,7 @@ public class PrintInvoice {
 	/**
 	 * Elaborazione fatture	
 	 */
-	private void process() {
+	private void sendInvoiceEmail() {
 		
 		try {
 			
@@ -74,10 +79,39 @@ public class PrintInvoice {
 			
 			while (rs.next()) {
 				
-				//System.out.println(rs.getString(1));
+				MInvoice i = new MInvoice(Env.getCtx(), rs.getInt(1), null);
 				
-				sendEmail(rs.getInt(1), rs.getString(2));
-				//sendEmail(rs.getInt(1), "anpiffer@gmail.com");
+				sendEmail(i, rs.getString(2));
+								
+				
+			}
+			
+		}
+		catch (Exception e) {
+			Util.addError(e);
+		}
+		
+	}
+	
+	/**
+	 * Elaborazione fatture	
+	 */
+	public void generateInvoice(String type) {
+		
+		try {
+			
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice i where i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and to_char(vatledgerdate, 'yyyy') = ?", null);
+			stmt.setInt(1, Ini.getInt("ad_client_id"));
+			stmt.setInt(2, Ini.getInt(type));
+			stmt.setString(3, year);
+			
+			ResultSet rs = stmt.executeQuery();
+			
+			while (rs.next()) {
+				
+				MInvoice i = new MInvoice(Env.getCtx(), rs.getInt(1), null);
+				GenerateInvoice(i);
+				
 				
 			}
 			
@@ -93,41 +127,11 @@ public class PrintInvoice {
 	 * @param C_Invoice_ID	ID della fattura da elaborare
 	 * @param to_email	Email a cui inviare la fattura
 	 */
-	private void sendEmail(int C_Invoice_ID, String to_email) {
+	private void sendEmail(MInvoice i, String to_email) {
 		
-		MInvoice i = new MInvoice(Env.getCtx(), C_Invoice_ID, null);
-		
-		MPInstance pInstance = new MPInstance (process, C_Invoice_ID);
-		ProcessInfo pi = new ProcessInfo (process.getName(), process.getAD_Process_ID(), MInvoice.Table_ID, C_Invoice_ID);
-		pi.setAD_User_ID(Env.getAD_User_ID(Env.getCtx()));
-		pi.setAD_Client_ID(Env.getAD_Client_ID(Env.getCtx()));
-		pi.setClassName(process.getClassname());
-		pi.setAD_PInstance_ID(pInstance.getAD_PInstance_ID());
-		
-		pi.setPrintPreview (false);
-		pi.setIsBatch(true);
-		
-		Trx trx = Trx.get(Trx.createTrxName("WebPrc"), true);
-		
-		boolean processOK = false;
-		
-		try
-		{				
-			processOK = process.processIt(pi, trx);			
-			trx.commit();
-			trx.close();
-		}
-		catch (Throwable t)
+		File f_invoice = createPdf(i);
+		if (f_invoice != null)
 		{
-			trx.rollback();
-			trx.close();
-		}
-		
-		File f_invoice;
-		if(processOK)
-		{
-			f_invoice=pi.getPDFReport();
-			
 			String subject = mText.getMailHeader() + " - " + i.getDocumentNo();
 			EMail email = client.createEMail(to_email, subject, null);
 			
@@ -153,7 +157,62 @@ public class PrintInvoice {
 			return;
 		}
 		
+	}
+	
+	public File createPdf(MInvoice i) {
 		
+		MPInstance pInstance = new MPInstance (process, i.getC_Invoice_ID());
+		ProcessInfo pi = new ProcessInfo (process.getName(), process.getAD_Process_ID(), MInvoice.Table_ID, i.getC_Invoice_ID());
+		pi.setAD_User_ID(Env.getAD_User_ID(Env.getCtx()));
+		pi.setAD_Client_ID(Env.getAD_Client_ID(Env.getCtx()));
+		pi.setClassName(process.getClassname());
+		pi.setAD_PInstance_ID(pInstance.getAD_PInstance_ID());
+		
+		pi.setPrintPreview (false);
+		pi.setIsBatch(true);
+		
+		Trx trx = Trx.get(Trx.createTrxName("WebPrc"), true);
+		
+		//boolean processOK = false;
+		
+		try
+		{				
+			process.processIt(pi, trx);			
+			trx.commit();
+			trx.close();
+			return pi.getPDFReport();
+		}
+		catch (Throwable t)
+		{
+			System.out.println(t.getMessage());
+			trx.rollback();
+			trx.close();
+			return null;
+		}
+		
+	}
+	
+	private void GenerateInvoice(MInvoice i) {
+		
+		File f_source = createPdf(i);
+		
+		if (f_source == null) {
+			System.out.println("File non rinominato");
+			return;
+		}
+		
+		String dest = Util.getArchivio(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
+		String nomeFileDest = i.getDocumentNo() + ".pdf";
+		
+		File f_dest = new File(dest + "/" + nomeFileDest);
+		
+		if (!f_dest.exists() || override) {
+			f_source.renameTo(f_dest);
+			System.out.println("Fattura ["+ i.getDocumentNo() +"] generata. ["+dest+"]");
+		}
+		
+		//System.out.println(i.getDocumentNo());
+		//System.out.println(dest);
 		
 	}
 

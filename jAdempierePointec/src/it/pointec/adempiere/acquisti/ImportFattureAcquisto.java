@@ -32,7 +32,6 @@ public class ImportFattureAcquisto {
 	private PreparedStatement _stmtBP;
 	private PreparedStatement _stmtChk;
 	private List<PassiveInvoice> _fatture = new ArrayList<PassiveInvoice>();
-	private String _type;
 	private int _c_doctype_id = 0;
 	private Date dataIva;
 	
@@ -40,7 +39,6 @@ public class ImportFattureAcquisto {
 		
 		try {
 			
-			this._type = _type;
 			if (_type.compareTo("fornitori")==0)
 				_c_doctype_id = Ini.getInt("doc_type_id_invoice_acq");
 			
@@ -73,10 +71,19 @@ public class ImportFattureAcquisto {
 			_stmtChk.setInt(1, Ini.getInt("ad_client_id"));
 			_stmtChk.setInt(2, Ini.getInt("ad_org_id"));
 			
-			String sql = "select valore from pointec_parametri";
-			String v = DB.getSQLValueString(null, sql);
-			dataIva = Util.getDate(v, "dd/MM/yyyy");
+			PreparedStatement stmt = DB.prepareStatement("select max (p.ENDDATE) from c_calendar c join c_year y on c.C_CALENDAR_ID = y.C_CALENDAR_ID join c_period p on y.C_YEAR_ID = p.C_YEAR_ID join C_PERIODCONTROL pc on p.C_PERIOD_ID = pc.C_PERIOD_ID where c.AD_CLIENT_ID = ? and pc.PERIODSTATUS = 'C' and p.STARTDATE < sysdate", null);
+			stmt.setInt(1, Ini.getInt("ad_client_id"));
+			//stmt.setInt(2, Ini.getInt("ad_org_id"));
 			
+			ResultSet rs = stmt.executeQuery();
+			
+			rs.next();
+			
+			dataIva = rs.getDate(1);
+			
+			rs.close();
+			stmt.close();
+
 			System.out.println("Data liquidazione IVA caricata: ["+dataIva.toString()+"]");
 			
 		}
@@ -201,8 +208,7 @@ public class ImportFattureAcquisto {
 	private void insertIntoAdempiere() {
 		
 		int id;
-		int n;
-				
+						
 		try {
 			
 			for(PassiveInvoice acq : _fatture){
@@ -264,7 +270,8 @@ public class ImportFattureAcquisto {
 	 */
 	private void elaboraDirectory() {
 		
-		File folder = new File(Ini.getString("fattureacquisto_start")+"/"+_type);
+		//System.out.println(Util.doctypeidToPath(1000005, "daelaborare"));
+		File folder = new File(Util.getDaElaborare(1000005));
 		File[] listOfFiles = folder.listFiles();
 		
 		for (File d : listOfFiles) {
