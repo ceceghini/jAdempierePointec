@@ -1,4 +1,4 @@
-package it.pointec.adempiere.acquisti;
+package it.pointec.adempiere.archive;
 
 import java.awt.Color;
 import java.io.FileOutputStream;

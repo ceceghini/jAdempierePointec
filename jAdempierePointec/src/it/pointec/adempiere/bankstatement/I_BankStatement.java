@@ -253,28 +253,28 @@ public class I_BankStatement {
 		
 		I_BankStatement i;
 		// CRGiovo
-		/*i = new ProcessBankStatement(new CRGiovo());
+		i = new CRGiovo();
 		
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		
 		// IWBank
-		i = new ProcessBankStatement(new IWBank());
+		i = new IWBank();
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		
 		// CartaIW
-		i = new ProcessBankStatement(new CartaIW());
+		i = new CartaIW();
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		
 		// Paypal
-		i = new ProcessBankStatement(new Paypal());
+		i = new Paypal();
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		
 		// Paypal2
-		i = new ProcessBankStatement(new Paypal2());
+		/*i = new ProcessBankStatement(new Paypal2());
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();*/
 		

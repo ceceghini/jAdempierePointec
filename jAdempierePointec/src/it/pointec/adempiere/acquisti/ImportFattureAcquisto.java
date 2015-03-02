@@ -1,6 +1,7 @@
 package it.pointec.adempiere.acquisti;
 
 import it.pointec.adempiere.Adempiere;
+import it.pointec.adempiere.archive.Archive;
 import it.pointec.adempiere.model.PassiveInvoice;
 import it.pointec.adempiere.util.Extractor;
 import it.pointec.adempiere.util.Ini;
