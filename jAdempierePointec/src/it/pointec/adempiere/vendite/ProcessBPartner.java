@@ -162,7 +162,7 @@ public class ProcessBPartner {
 					+ "and exists (select 1 from I_BPARTNER b where a.email = b.email and a.i_bpartner_id <> b.i_bpartner_id)");
 			DB.executeUpdateEx(sql.toString(), null);
 			
-			// Aggiorno il campo value sul db sulla base della email
+			// Aggiorno il campo value sul db sulla base del codice fiscale
 			sql = new StringBuffer ("update I_BPARTNER a "
 					+ "set value = (select value from C_BPARTNER b where a.fiscalcode = b.fiscalcode and a.value <> b.value)"
 					+ "where exists (select value from C_BPARTNER b where a.fiscalcode = b.fiscalcode and a.value <> b.value)");
@@ -224,6 +224,21 @@ public class ProcessBPartner {
 			sql = new StringBuffer("update I_BPARTNER i "
 					+ "set (i.AD_USER_ID, i.EMAIL) = (select u.AD_USER_ID, u.EMAIL from AD_USER u where i.C_BPARTNER_ID = u.C_BPARTNER_ID) "
 					+ "where exists (select 1 from AD_USER u where i.C_BPARTNER_ID = u.C_BPARTNER_ID)");
+			DB.executeUpdateEx(sql.toString(), null);
+			
+			// Aggiornamento bp senza codice fiscale e partita iva sulla base solamente del nome
+			/*sql = new StringBuffer("update i_bpartner i "
+					+ "set i.value = (select value from C_BPARTNER b where i.name = b.name and b.taxid is null and b.fiscalcode is null) "
+					+ "where i.taxid is null "
+					+ " and i.fiscalcode is null "
+					+ " and i.value like 'ID_BA%'"
+					+ " and exists (select 1 from C_BPARTNER b where i.name = b.name and b.taxid is null and b.fiscalcode is null)");*/
+			sql = new StringBuffer("update i_bpartner i "
+					+ "set i.value = (select value from C_BPARTNER b where i.name = b.name) "
+					+ "where i.taxid is null "
+					+ " and i.fiscalcode is null "
+					+ " and i.value like 'ID_BA%'"
+					+ " and exists (select 1 from C_BPARTNER b where i.name = b.name)");
 			DB.executeUpdateEx(sql.toString(), null);
 						
 			

@@ -57,13 +57,9 @@ public class Archive {
 	private static void setPoReference() {
 		
 		try {
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and description not like 'daarchiviare%' and description not like 'archiviati%'", null);
+			PreparedStatement stmt = DB.prepareStatement("select i.c_invoice_id from c_invoice i join C_DOCTYPE d on i.C_DOCTYPE_ID = d.C_DOCTYPE_ID where i.DOCSTATUS = 'CO' and i.ad_client_id = ? and i.ad_org_id = ? and i.description not like 'daarchiviare%' and i.description not like 'archiviati%' and d.DOCBASETYPE in ('APC', 'API') and i.vatledgerno is not null", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
-			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
-			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
-			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
-			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
 			
 			ResultSet rs = stmt.executeQuery();
 			MInvoice i;
@@ -115,8 +111,7 @@ public class Archive {
 			
 			PreparedStatement stmt = DB.prepareStatement("select max (p.ENDDATE) from c_calendar c join c_year y on c.C_CALENDAR_ID = y.C_CALENDAR_ID join c_period p on y.C_YEAR_ID = p.C_YEAR_ID join C_PERIODCONTROL pc on p.C_PERIOD_ID = pc.C_PERIOD_ID where c.AD_CLIENT_ID = ? and pc.PERIODSTATUS = 'C' and p.STARTDATE < sysdate", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
-			//stmt.setInt(2, Ini.getInt("ad_org_id"));
-			
+						
 			ResultSet rs = stmt.executeQuery();
 			
 			rs.next();
@@ -126,14 +121,10 @@ public class Archive {
 			rs.close();
 			stmt.close();
 			
-			stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and description like 'daarchiviare%' and vatledgerdate <= ?", null);
+			stmt = DB.prepareStatement("select i.c_invoice_id from c_invoice i join C_DOCTYPE d on i.C_DOCTYPE_ID = d.C_DOCTYPE_ID where i.DOCSTATUS = 'CO' and i.ad_client_id = ? and i.ad_org_id = ? and i.description like 'daarchiviare%' and i.vatledgerdate <= ? and d.DOCBASETYPE in ('API', 'APC') and i.vatledgerno is not null", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
-			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
-			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
-			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
-			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
-			stmt.setDate(7, date);
+			stmt.setDate(3, date);
 			
 			//System.out.println(date.toString());
 						
@@ -208,13 +199,9 @@ public class Archive {
 			
 			
 			
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice where DOCSTATUS = 'CO' and ad_client_id = ? and ad_org_id = ? and C_DOCTYPE_ID in (?, ?, ?, ?) and nvl(description, '#') not like 'daarchiviare%' and nvl(description, '#') not like 'archiviati%'", null);
+			PreparedStatement stmt = DB.prepareStatement("select i.c_invoice_id from c_invoice i join C_DOCTYPE d on i.C_DOCTYPE_ID = d.C_DOCTYPE_ID where i.DOCSTATUS = 'CO' and i.ad_client_id = ? and i.ad_org_id = ? and nvl(i.description, '#') not like 'daarchiviare%' and nvl(i.description, '#') not like 'archiviati%' and d.DOCBASETYPE in ('API', 'APC') and i.vatledgerno is not null", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
-			stmt.setInt(3, Ini.getInt("doc_type_id_invoice_acq"));
-			stmt.setInt(4, Ini.getInt("doc_type_id_invoice_intra"));
-			stmt.setInt(5, Ini.getInt("doc_type_id_creditmemo_acq"));
-			stmt.setInt(6, Ini.getInt("doc_type_id_creditmemo_intra"));
 			
 			ResultSet rs = stmt.executeQuery();
 			

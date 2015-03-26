@@ -43,7 +43,7 @@ public class PrintInvoice {
 		mText = new MMailText(Env.getCtx(), Ini.getInt("r_mailtext_id"), null);
 		
 		override = Ini.getBoolean("generate_invoice_override");
-		year = Ini.getString("archive_year");
+		year = Ini.getString("generate_invoice_year");
 		
 	}
 

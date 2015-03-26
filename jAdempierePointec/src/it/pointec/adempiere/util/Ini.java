@@ -27,26 +27,56 @@ public class Ini {
 	}
 	
 	public static int getInt(String key) {
-		return Integer.parseInt(p.getProperty(key));
+		
+		String v = p.getProperty(key);
+		
+		if (v==null) {
+			Util.addError("Proprietà non trovata ["+key+"]\n");
+			return 0;
+		}
+		
+		return Integer.parseInt(v);
+		
+			
 	}
 	
 	public static boolean getBoolean(String key) {
-		if (Integer.parseInt(p.getProperty(key))==1)
+		
+		String v = p.getProperty(key);
+		
+		if (v==null) {
+			Util.addError("Proprietà non trovata ["+key+"]\n");
+			return false;
+		}
+		
+		if (Integer.parseInt(v)==1)
 			return true;
 		else
 			return false;
 	}
 
 	public static String getString(String key) {
-		return p.getProperty(key);
+		
+		String v = p.getProperty(key);
+		
+		if (v==null) {
+			Util.addError("Proprietà non trovata ["+key+"]\n");
+			return "";
+		}
+		
+		return v;
 	}
 
 	public static BigDecimal getBigDecimal(String key) {
-		return new BigDecimal(p.getProperty(key));
-	}
-	
-	public static boolean istrue(String key) {
-		return Boolean.parseBoolean(p.getProperty(key));
+		
+		String v = p.getProperty(key);
+		
+		if (v==null) {
+			Util.addError("Proprietà non trovata ["+key+"]\n");
+			return new BigDecimal(0);
+		}
+		
+		return new BigDecimal(v);
 	}
 	
 }

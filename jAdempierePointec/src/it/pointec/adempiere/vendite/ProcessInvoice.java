@@ -60,7 +60,8 @@ public class ProcessInvoice {
 			_stmt.setNull(5, Types.INTEGER);
 			_stmt.setNull(20, Types.INTEGER);
 			
-			_first = Ini.getString("first_invoice");	
+			//_first = Ini.getString("first_invoice");
+			_first="";
 			
 		}
 		catch (Exception e) {
@@ -387,7 +388,7 @@ public class ProcessInvoice {
 	 */
 	public void importAndProcess() {
 		
-		if (Ini.istrue("import_product")) {
+		if (Ini.getBoolean("import_product")) {
 			_product.importIntoAdempiere();
 			Util.printErrorAndExit();
 		
@@ -395,7 +396,7 @@ public class ProcessInvoice {
 			Util.printErrorAndExit();
 		}
 		
-		if (Ini.istrue("import_bp")) {
+		if (Ini.getBoolean("import_bp")) {
 			_bpartner.importIntoAdempiere();
 			Util.printErrorAndExit();
 		
@@ -403,7 +404,7 @@ public class ProcessInvoice {
 			Util.printErrorAndExit();
 		}
 		
-		if (Ini.istrue("import_invoice")) {
+		if (Ini.getBoolean("import_invoice")) {
 			importIntoAdempiere();
 			Util.printErrorAndExit();
 		

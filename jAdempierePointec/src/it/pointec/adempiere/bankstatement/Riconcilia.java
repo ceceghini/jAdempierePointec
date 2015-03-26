@@ -189,7 +189,7 @@ public class Riconcilia {
 					   + "		on i.c_bpartner_id = b.c_bpartner_id"
 					   + " where docstatus = 'CO'"
 					   + "   and i.ISPAID = 'N'"
-					   + "   and c_doctype_id in (1000002, 1000042)"
+					   + "   and c_doctype_id in (1000002, 1000042, 1000052)"
 					   + "   and i.ad_client_id = ? and i.ad_org_id = ?"
 					   + "   and i.grandtotal = ?";
 			sql += query;
@@ -226,7 +226,7 @@ public class Riconcilia {
 					   + "		on i.c_bpartner_id = b.c_bpartner_id"
 					   + " where docstatus = 'CO'"
 					   + "   and i.ISPAID = 'N'"
-					   + "   and c_doctype_id in (1000002, 1000042)"
+					   + "   and c_doctype_id in (1000002, 1000042, 1000052)"
 					   + "   and i.ad_client_id = ? and i.ad_org_id = ?"
 					   + "   and i.grandtotal = ?";
 			sql += query;
