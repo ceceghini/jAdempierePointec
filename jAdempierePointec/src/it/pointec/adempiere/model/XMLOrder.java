@@ -25,6 +25,8 @@ public class XMLOrder {
 	private BigDecimal grand_total;
 	
 	private BigDecimal shipping_amount;
+	
+	private BigDecimal discount_amount;
 
 	@XStreamConverter(BigDecimalConverter.class)
 	private BigDecimal cod_fee;
@@ -56,6 +58,10 @@ public class XMLOrder {
 
 	public BigDecimal getShipping_amount() {
 		return shipping_amount;
+	}
+	
+	public BigDecimal getDiscountAmount() {
+		return discount_amount;
 	}
 
 	public BigDecimal getCod_fee() {
@@ -89,7 +95,7 @@ public class XMLOrder {
 		
 	}
 	
-	public void addShippingAndFeeProduct() {
+	public void addExtraProduct() {
 		
 		XMLProduct p;
 		
@@ -103,6 +109,13 @@ public class XMLOrder {
 		if (this.cod_fee != null) {
 			if (this.cod_fee.compareTo(new BigDecimal(0))!=0) {
 				p = new XMLProduct(Ini.getString("prodotto_contrassegno"), this.cod_fee);
+				this.products.add(p);
+			}
+		}
+		
+		if (this.discount_amount != null) {
+			if (this.discount_amount.compareTo(new BigDecimal(0))!=0) {
+				p = new XMLProduct(Ini.getString("prodotto_sconto"), this.discount_amount);
 				this.products.add(p);
 			}
 		}

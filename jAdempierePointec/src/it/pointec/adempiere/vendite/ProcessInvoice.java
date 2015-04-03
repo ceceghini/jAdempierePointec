@@ -107,7 +107,7 @@ public class ProcessInvoice {
 		//String last = "000003680";
 		
 		try {
-			//downloadFromMagento("http://www.lucebrillante.it");
+			downloadFromMagento("http://www.lucebrillante.it");
 			//downloadFromMagento("http://www.tagliato.it");
 			downloadFromMagento("http://www.stampaperfetta.it");
 		}
@@ -181,13 +181,20 @@ public class ProcessInvoice {
 			
 			// Verifica totali
 			BigDecimal shipping = o.getShipping_amount();
+			
 			BigDecimal fee;
 			if (o.getCod_fee() == null)
 				fee = new BigDecimal(0);
 			else
 				fee = o.getCod_fee();
 			
-			BigDecimal chk_total = o.getItemAmount().add(fee).add(shipping);
+			BigDecimal discount;
+			if (o.getDiscountAmount() == null)
+				discount = new BigDecimal(0);
+			else
+				discount = o.getDiscountAmount();
+			
+			BigDecimal chk_total = o.getItemAmount().add(fee).add(shipping).add(discount);
 			BigDecimal chk_total2 = chk_total.setScale(2, BigDecimal.ROUND_HALF_EVEN);
 			
 			if (o.getGrand_total().subtract(chk_total2).abs().compareTo(new BigDecimal(0.01))>0) {
@@ -213,7 +220,7 @@ public class ProcessInvoice {
 			for(String k : _orders.keySet()){
 				
 				o = _orders.get(k);
-				o.addShippingAndFeeProduct();
+				o.addExtraProduct();
 				
 				if (o.getBp().getIs_business_address()==1)
 					_stmt.setInt(4, Ini.getInt("doc_type_id_invoice"));
@@ -258,8 +265,10 @@ public class ProcessInvoice {
 					_stmt.setInt(8, Ini.getInt("paymenttem_banca"));
 				else if (o.getPayment_method().compareTo("amazon")==0)
 					_stmt.setInt(8, Ini.getInt("paymenttem_amazon"));
-				else
+				else {
 					Util.addError("[" + o.getPayment_method() + "] metodo di pagamento non gestito\n");
+					return;
+				}
 				
 				
 				// Loop fra i prodotti

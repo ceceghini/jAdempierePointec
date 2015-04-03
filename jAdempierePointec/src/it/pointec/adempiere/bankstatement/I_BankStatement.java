@@ -273,11 +273,6 @@ public class I_BankStatement {
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		
-		// Paypal2
-		/*i = new ProcessBankStatement(new Paypal2());
-		i.importIntoAdempiere();
-		Util.printErrorAndExit();*/
-		
 		// Sda
 		i = new Sda();
 		i.importIntoAdempiere();
