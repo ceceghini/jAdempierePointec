@@ -1,6 +1,7 @@
 package it.pointec.adempiere.vendite;
 
 import java.io.File;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -71,6 +72,8 @@ public class PrintInvoice {
 		
 		try {
 			
+			// Invio fatture per email
+			
 			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id, u.EMAIL from c_invoice i join c_bpartner b on i.C_BPARTNER_ID = b.C_BPARTNER_ID join ad_user u on b.C_BPARTNER_ID = u.C_BPARTNER_ID where i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and i.ISPRINTED='N'", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("doc_type_id_invoice"));
@@ -85,6 +88,24 @@ public class PrintInvoice {
 								
 				
 			}
+			
+			// Verifica ultima fattura inserita a sistema
+			stmt = DB.prepareStatement("select max(i.DATEINVOICED) from c_invoice i where i.ad_client_id = ? and i.C_DOCTYPE_ID = ?", null);
+			stmt.setInt(1, Ini.getInt("ad_client_id"));
+			stmt.setInt(2, Ini.getInt("doc_type_id_invoice"));
+			
+			rs = stmt.executeQuery();
+			rs.next();
+			
+			long last = rs.getDate(1).getTime();
+			java.util.Date now = new java.util.Date();
+			
+			if((now.getTime() - last) > 432000000) {
+				
+				Util.addError("ATTENZIONE !!! Il caricamento delle fatture è fermo da più di 5 giorni");
+				
+			}
+						
 			
 		}
 		catch (Exception e) {

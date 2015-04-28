@@ -61,7 +61,7 @@ public class ProcessInvoice {
 			_stmt.setNull(20, Types.INTEGER);
 			
 			//_first = Ini.getString("first_invoice");
-			_first="";
+			//_first="000006805";
 			
 		}
 		catch (Exception e) {
@@ -108,7 +108,7 @@ public class ProcessInvoice {
 		
 		try {
 			downloadFromMagento("http://www.lucebrillante.it");
-			//downloadFromMagento("http://www.tagliato.it");
+			downloadFromMagento("http://www.elodie.it");
 			downloadFromMagento("http://www.stampaperfetta.it");
 		}
 		catch (Exception e) {
@@ -128,6 +128,7 @@ public class ProcessInvoice {
 		String url;
 		
 		url = baseURl + "/feed/adempiere/fatture.php?first_invoice_id="+_first;
+		//url = baseURl + "/feed/adempiere/fatture.php";
 		
 		System.out.println("Elaborazione url ["+url+"]");
 		Util.downloadFile(url, "/tmp/ordini.xml");
