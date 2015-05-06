@@ -55,7 +55,7 @@ public class ProcessInvoice {
 			_stmt.setInt(2, Ini.getInt("ad_client_id"));
 			_stmt.setString(6, "Y");
 			_stmt.setInt(7, Ini.getInt("salesrep_id"));
-			_stmt.setInt(15, Ini.getInt("c_tax_id"));
+			//_stmt.setInt(15, Ini.getInt("c_tax_id"));
 			_stmt.setInt(18, Ini.getInt("m_pricelist_version_id"));
 			_stmt.setNull(5, Types.INTEGER);
 			_stmt.setNull(20, Types.INTEGER);
@@ -223,10 +223,14 @@ public class ProcessInvoice {
 				o = _orders.get(k);
 				o.addExtraProduct();
 				
-				if (o.getBp().getIs_business_address()==1)
+				if (o.getBp().getIs_business_address()==1) {
 					_stmt.setInt(4, Ini.getInt("doc_type_id_invoice"));
-				else
+					_stmt.setInt(15, Ini.getInt("c_tax_id"));
+				}
+				else {
 					_stmt.setInt(4, Ini.getInt("doc_type_id_corrispettivo"));
+					_stmt.setInt(15, Ini.getInt("c_tax_id_c"));
+				}
 				
 				_stmt.setDate(10, o.getCreated_at());	
 				_stmt.setDate(11, o.getCreated_at());	// Data fattura
