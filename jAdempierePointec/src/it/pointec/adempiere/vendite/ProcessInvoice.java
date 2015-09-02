@@ -11,10 +11,12 @@ import it.pointec.adempiere.util.Util;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Calendar;
 import java.util.Hashtable;
 
 import org.compiere.model.MBPartner;
@@ -60,7 +62,7 @@ public class ProcessInvoice {
 			_stmt.setNull(5, Types.INTEGER);
 			_stmt.setNull(20, Types.INTEGER);
 			
-			//_first = Ini.getString("first_invoice");
+			_first = Ini.getString("first_invoice");
 			//_first="000006805";
 			
 		}
@@ -107,7 +109,7 @@ public class ProcessInvoice {
 		//String last = "000003680";
 		
 		try {
-			downloadFromMagento("http://www.lucebrillante.it");
+			//downloadFromMagento("http://www.lucebrillante.it");
 			downloadFromMagento("http://www.elodie.it");
 			downloadFromMagento("http://www.stampaperfetta.it");
 		}
@@ -216,6 +218,17 @@ public class ProcessInvoice {
 		int bpId;
 		int id;
 		
+		Calendar cal = Calendar.getInstance();
+		java.util.Date utilDate = new java.util.Date();
+		cal.setTime(utilDate);
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		
+		java.sql.Date d = new java.sql.Date(cal.getTimeInMillis());
+		
+		
 		try {
 			
 			for(String k : _orders.keySet()){
@@ -232,9 +245,9 @@ public class ProcessInvoice {
 					_stmt.setInt(15, Ini.getInt("c_tax_id_c"));
 				}
 				
-				_stmt.setDate(10, o.getCreated_at());	
-				_stmt.setDate(11, o.getCreated_at());	// Data fattura
-				_stmt.setDate(19, o.getCreated_at());	// Data iva
+				_stmt.setDate(10, d);	
+				_stmt.setDate(11, d);	// Data fattura
+				_stmt.setDate(19, d);	// Data iva
 				_stmt.setString(17, o.getLast_trans_id());
 				
 				_stmt.setString(21, o.getOrder_id());	// Riferimento ordine

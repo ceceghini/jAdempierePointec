@@ -93,6 +93,8 @@ public class I_BankStatement {
 			}
 			
 			String path = _startpath + "/" + _source.get_subpath();
+			
+			Util.debug("Elaborazione directory ["+path+"]");
 		
 			File folder = new File(path);
 			File[] listOfFiles = folder.listFiles();
@@ -101,6 +103,8 @@ public class I_BankStatement {
 				for (int i = 0; i < listOfFiles.length; i++)  {
 					
 					initialize();
+					
+					Util.debug("Elaborazione file ["+path+"/"+listOfFiles[i].getName()+"]");
 					_source.insertIntoAdempiere(path+"/"+listOfFiles[i].getName());
 					
 					Util.printErrorAndExit();
@@ -241,6 +245,8 @@ public class I_BankStatement {
 		Adempiere a = new Adempiere();
 		a.inizializza();
 		
+		Util.debug("Import bank statement");
+		
 		Import();
 		Util.printErrorAndExit();
 				
@@ -264,9 +270,9 @@ public class I_BankStatement {
 		Util.printErrorAndExit();
 		
 		// CartaIW
-		i = new CartaIW();
-		i.importIntoAdempiere();
-		Util.printErrorAndExit();
+		//i = new CartaIW();
+		//i.importIntoAdempiere();
+		//Util.printErrorAndExit();
 		
 		// Paypal
 		i = new Paypal();
@@ -279,7 +285,12 @@ public class I_BankStatement {
 		Util.printErrorAndExit();
 		
 		// Amazon
-		i = new Amazon();
+		//i = new Amazon();
+		//i.importIntoAdempiere();
+		//Util.printErrorAndExit();
+		
+		// Cartasi
+		i = new CartaSi();
 		i.importIntoAdempiere();
 		Util.printErrorAndExit();
 		

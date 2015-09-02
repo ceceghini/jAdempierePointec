@@ -382,6 +382,8 @@ public class ImportFattureAcquisto {
 			i.set_sku(rs.getString(9));
 			i.set_c_doctype_id(_c_doctype_id);
 			
+			//Util.debug("");
+			
 			// La data di ultima liquidazione IVA è successiva alla data della fattura. La fattura va inserita manualmente.
 			if (dataIva.compareTo(i.get_dateinvoiced())>0) {
 				

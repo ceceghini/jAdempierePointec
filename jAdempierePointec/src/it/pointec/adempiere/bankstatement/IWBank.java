@@ -4,6 +4,7 @@ import it.pointec.adempiere.util.Util;
 
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -26,7 +27,10 @@ public class IWBank extends I_BankStatement implements I_Source {
 	    	
 	    	if (data.length==8) {
 	    		
-	    		if ( Util.isNumeric(data[0]) ) {
+	    		//if ( Util.isNumeric(data[0]) ) {
+	    		if (data[0].compareTo("conto 02396")==0) {
+	    			
+	    			Util.debug("Linea elaborata "+Arrays.toString(data)+"");
 	    			
 	    			line = new I_BankStatement_Line();
 	    			

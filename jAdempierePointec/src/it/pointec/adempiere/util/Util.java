@@ -1,13 +1,18 @@
 package it.pointec.adempiere.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.sql.Date;
@@ -30,6 +35,7 @@ public class Util {
 	
 	private static StringBuffer _error = new StringBuffer();
 	private static boolean _has_error = false;
+	private static boolean _debug = false;
 	
 	/**
 	 * Download e salvataggio di un file
@@ -39,11 +45,24 @@ public class Util {
 	 */
 	public static void downloadFile(String url, String file) throws IOException {
 		
-		URL website = new URL(url);
+		/*URL website = new URL(url);
 		ReadableByteChannel rbc = Channels.newChannel(website.openStream());
 		FileOutputStream fos = new FileOutputStream(file);
 	    fos.getChannel().transferFrom(rbc, 0, 1 << 24);
-	    fos.close();
+	    fos.close();*/
+		
+		URL website = new URL(url);
+		URLConnection c = website.openConnection();
+		c.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0");
+		InputStream i = c.getInputStream();
+		OutputStream o = new FileOutputStream(file);
+		int read = 0;
+		byte[] bytes = new byte[1024];
+		while ((read = i.read(bytes)) != -1) {
+			o.write(bytes, 0, read);
+		}
+		o.close();
+		
 		
 	}
 	
@@ -245,6 +264,8 @@ public class Util {
 	 */
 	public static boolean moveFile(String source, String dest, String nomeFileSource, String nomeFileDest) {
 		
+		Util.debug("Util.moveFile ["+source+"] ["+dest+"] ["+nomeFileSource+"] ["+nomeFileDest+"]");
+		
 		// Verifico se il file sorgente esiste
 		File f_source = new File(source + "/" + nomeFileSource);
 		if (!f_source.exists()) {
@@ -362,4 +383,25 @@ public class Util {
 		}  
 			return true;  
 		}
+	
+	
+	/**
+	 * Impostazione debug
+	 */
+	public static void setDebug() {
+		
+		if (Ini.getBoolean("debug"))
+			_debug = true;
+		
+	}
+	
+	/**
+	 * debug line
+	 * @param str
+	 */
+	public static void debug(String str) {
+		if (_debug)
+			System.out.println(str);
+	}
+	
 }
