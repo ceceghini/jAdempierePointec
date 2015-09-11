@@ -1,6 +1,7 @@
 package it.pointec.adempiere.model;
 
 import it.pointec.adempiere.util.Ini;
+import it.pointec.adempiere.util.Util;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -56,10 +57,18 @@ public class PassiveInvoice {
 		this._fullpath = _fullpath;
 	}
 	public BigDecimal get_price() {
-		return _grandtotal.multiply(Ini.getBigDecimal("aliquota_iva_per")).setScale(2, BigDecimal.ROUND_HALF_EVEN);
+		if (this._c_doctype_id==1000005)
+			return _grandtotal.multiply(Ini.getBigDecimal("aliquota_iva_per")).setScale(2, BigDecimal.ROUND_HALF_EVEN);
+		if (this._c_doctype_id==999775)
+			return _grandtotal;
+		return null;
 	}
 	public BigDecimal get_tax_amount() {
-		return _grandtotal.subtract(_grandtotal.multiply(Ini.getBigDecimal("aliquota_iva_per"))).setScale(2, BigDecimal.ROUND_HALF_EVEN);
+		if (this._c_doctype_id==1000005)
+			return _grandtotal.subtract(_grandtotal.multiply(Ini.getBigDecimal("aliquota_iva_per"))).setScale(2, BigDecimal.ROUND_HALF_EVEN);
+		if (this._c_doctype_id==999775)
+			return new BigDecimal(0);
+		return null;
 	}
 	public void set_grandtotal(BigDecimal _grandtotal) {
 		this._grandtotal = _grandtotal;
@@ -79,5 +88,7 @@ public class PassiveInvoice {
 	public void set_sku(String _sku) {
 		this._sku = _sku;
 	}
-	
+	public int getTaxId() {
+		return Ini.getInt("c_tax_id_"+this._c_doctype_id);
+	}
 }

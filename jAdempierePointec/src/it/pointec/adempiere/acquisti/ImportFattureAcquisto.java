@@ -43,6 +43,9 @@ public class ImportFattureAcquisto {
 			if (_type.compareTo("fornitori")==0)
 				_c_doctype_id = Ini.getInt("doc_type_id_invoice_acq");
 			
+			if (_type.compareTo("fornitori_intra")==0)
+				_c_doctype_id = Ini.getInt("doc_type_id_invoice_intra");
+			
 			if (_c_doctype_id==0) {
 				Util.addError("_c_doctype_id non impostato. "+_type);
 				Util.printErrorAndExit();
@@ -57,7 +60,7 @@ public class ImportFattureAcquisto {
 			_stmt.setInt(2, Ini.getInt("ad_client_id"));
 			_stmt.setString(6, "Y");
 			//_stmt.setInt(7, Ini.get_salesrep_id());
-			_stmt.setInt(15, Ini.getInt("c_tax_id"));
+			//_stmt.setInt(15, Ini.getInt("c_tax_id"));
 			
 			_stmt.setNull(8, Types.INTEGER);
 			_stmt.setNull(7, Types.INTEGER);
@@ -116,6 +119,18 @@ public class ImportFattureAcquisto {
 		
 		// Importazione fatture acquisti
 		ImportFattureAcquisto ifa = new ImportFattureAcquisto("fornitori");
+		
+		ifa.elaboraDirectory();
+		Util.printErrorAndExit();
+		
+		ifa.insertIntoAdempiere();
+		Util.printErrorAndExit();
+		
+		ifa.process();
+		Util.printErrorAndExit();
+		
+		// Import fatture acquisto intra
+		ifa = new ImportFattureAcquisto("fornitori_intra");
 		
 		ifa.elaboraDirectory();
 		Util.printErrorAndExit();
@@ -243,6 +258,7 @@ public class ImportFattureAcquisto {
 						_stmt.setString(12, acq.get_sku());
 						_stmt.setInt(13, 1);
 						_stmt.setBigDecimal(14, acq.get_price());
+						_stmt.setInt(15, acq.getTaxId());
 						_stmt.setBigDecimal(16, acq.get_tax_amount());
 						
 						_stmt.execute();
@@ -271,8 +287,7 @@ public class ImportFattureAcquisto {
 	 */
 	private void elaboraDirectory() {
 		
-		//System.out.println(Util.doctypeidToPath(1000005, "daelaborare"));
-		File folder = new File(Util.getDaElaborare(1000005));
+		File folder = new File(Util.getDaElaborare(_c_doctype_id));
 		File[] listOfFiles = folder.listFiles();
 		
 		for (File d : listOfFiles) {

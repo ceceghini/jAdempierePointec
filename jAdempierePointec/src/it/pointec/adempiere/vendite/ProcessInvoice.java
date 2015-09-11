@@ -238,11 +238,11 @@ public class ProcessInvoice {
 				
 				if (o.getBp().getIs_business_address()==1) {
 					_stmt.setInt(4, Ini.getInt("doc_type_id_invoice"));
-					_stmt.setInt(15, Ini.getInt("c_tax_id"));
+					_stmt.setInt(15, Ini.getInt("c_tax_id_1000005"));
 				}
 				else {
 					_stmt.setInt(4, Ini.getInt("doc_type_id_corrispettivo"));
-					_stmt.setInt(15, Ini.getInt("c_tax_id_c"));
+					_stmt.setInt(15, Ini.getInt("c_tax_id_1000052"));
 				}
 				
 				_stmt.setDate(10, d);	
