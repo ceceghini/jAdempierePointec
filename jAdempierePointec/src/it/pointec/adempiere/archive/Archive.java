@@ -159,29 +159,49 @@ public class Archive {
 				//System.out.println(source);
 				//System.out.println(dest);
 				
-				if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
-					
-					description = "archiviati\n"+nomeFileDest;
-					
-					i.setDescription(description);
-					
-					System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
-					
-					// Timbro
-					source = dest;
-					dest = Util.getDaStampare(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
-					
-					createPdf(source+"/"+nomeFileDest, dest+"/"+nomeFileDest, i);
+				// Verifica se il file pdf è criptato
+				PdfReader pdf = new PdfReader(source + "/" + nomeFileSource);
 				
-					i.save();
+				if (pdf.isEncrypted()) {
+					Util.moveFile(source, "/tmp", nomeFileSource, "tmp.pdf");
+					String c = "qpdf --decrypt /tmp/tmp.pdf /tmp/decrypt.pdf";
+					Util.debug(c);
+					Runtime.getRuntime().exec(c);
+					Util.moveFile("/tmp", source, "decrypt.pdf", nomeFileSource);
+					pdf = new PdfReader(source + "/" + nomeFileSource);
+				}
+				
+				if (!pdf.isEncrypted()) {
+									
+					if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
+						
+						description = "archiviati\n"+nomeFileDest;
+						
+						i.setDescription(description);
+						
+						System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
+						
+						// Timbro
+						source = dest;
+						dest = Util.getDaStampare(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
+						
+						createPdf(source+"/"+nomeFileDest, dest+"/"+nomeFileDest, i);
+						
+						Util.printErrorAndExit();
 					
-					
-					
+						i.save();
+						
+						
+						
+					}
+					else {
+						
+						Util.addError("File [" + nomeFileSource + "] NON SPOSTATO\n");
+						
+					}
 				}
 				else {
-					
-					Util.addError("File [" + nomeFileSource + "] NON SPOSTATO\n");
-					
+					Util.addError("File [" + nomeFileSource + "] NON SPOSTATO [CRIPTATO]\n");
 				}
 								
 			}			

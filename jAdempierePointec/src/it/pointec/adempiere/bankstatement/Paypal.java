@@ -7,6 +7,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.compiere.util.DB;
@@ -102,6 +103,9 @@ public class Paypal extends I_BankStatement implements I_Source {
 	
 	private void getPaypalAndInsert(Calendar d) throws PayPalException, SQLException {
 		
+		SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd");
+		Util.debug("Elaborazione paypal data: " + formatter.format(d.getTime()) + "]");
+		
 		I_BankStatement_Line line;
 						
 		CallerServices caller = new CallerServices();
@@ -134,7 +138,17 @@ public class Paypal extends I_BankStatement implements I_Source {
 			for (int i = 0; i < ts.length; i++)
 			{
 				
-				if (ts[i].getStatus().compareTo("Canceled")!=0 && ts[i].getType().compareTo("Fee Reversal")!=0 && ts[i].getType().compareTo("Bill")!=0 && ts[i].getStatus().compareTo("Removed")!=0 && ts[i].getType().compareTo("Authorization")!=0) {
+				if (
+						ts[i].getStatus().compareTo("Canceled") !=0 &&
+						ts[i].getType().compareTo("Fee Reversal") !=0 &&
+						ts[i].getType().compareTo("Bill") !=0 &&
+						ts[i].getStatus().compareTo("Removed") !=0 && 
+						ts[i].getType().compareTo("Authorization") !=0 &&
+						ts[i].getType().compareTo("Temporary Hold") != 0 &&
+						ts[i].getGrossAmount() != null
+					) {
+					
+					Util.debug("Elaborazione riga [" + ts[i].getTransactionID() + "]");
 				
 					line = new I_BankStatement_Line();
 					
@@ -146,6 +160,8 @@ public class Paypal extends I_BankStatement implements I_Source {
 					
 					super.insertLineIntoAdempiere(line);
 					
+					Util.debug("Fine elaborazione riga [" + ts[i].getTransactionID() + "]");
+					
 				}
 				
 				
@@ -155,6 +171,8 @@ public class Paypal extends I_BankStatement implements I_Source {
 		{
 			System.out.println("Found 0 transaction [" + d.get(Calendar.DAY_OF_MONTH) + "/" + d.get(Calendar.MONTH) + "/" + d.get(Calendar.YEAR)+"]");
 		}
+		
+		Util.debug("Fine elaborazione paypal data: " + formatter.format(d.getTime()) + "]");
 		
 	}
 

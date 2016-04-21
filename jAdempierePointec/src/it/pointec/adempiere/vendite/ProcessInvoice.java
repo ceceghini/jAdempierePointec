@@ -11,7 +11,6 @@ import it.pointec.adempiere.util.Util;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -110,7 +109,7 @@ public class ProcessInvoice {
 		
 		try {
 			//downloadFromMagento("http://www.lucebrillante.it");
-			downloadFromMagento("http://www.elodie.it");
+			//downloadFromMagento("http://www.elodie.it");
 			downloadFromMagento("http://www.stampaperfetta.it");
 		}
 		catch (Exception e) {

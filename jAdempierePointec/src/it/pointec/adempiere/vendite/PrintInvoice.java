@@ -1,7 +1,6 @@
 package it.pointec.adempiere.vendite;
 
 import java.io.File;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -117,6 +116,38 @@ public class PrintInvoice {
 	/**
 	 * Elaborazione fatture	
 	 */
+	public void sendInvoiceEmailSingle() {
+		
+		try {
+			
+			// Invio fatture per email
+			
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id, 'ceceghini@gmail.com' as email from c_invoice i join c_bpartner b on i.C_BPARTNER_ID = b.C_BPARTNER_ID join ad_user u on b.C_BPARTNER_ID = u.C_BPARTNER_ID where i.ad_client_id = ? and i.documentno = ?", null);
+			stmt.setInt(1, Ini.getInt("ad_client_id"));
+			stmt.setString(2, Ini.getString("send_single_invoice_documentno"));
+			
+			ResultSet rs = stmt.executeQuery();
+			
+			while (rs.next()) {
+				
+				MInvoice i = new MInvoice(Env.getCtx(), rs.getInt(1), null);
+				
+				sendEmail(i, rs.getString(2));
+								
+				
+			}
+						
+			
+		}
+		catch (Exception e) {
+			Util.addError(e);
+		}
+		
+	}
+	
+	/**
+	 * Elaborazione fatture	
+	 */
 	public void generateInvoice(String type) {
 		
 		try {
@@ -165,6 +196,9 @@ public class PrintInvoice {
 			String msg = email.send();
 			
 			if (msg.compareTo("OK")==0) {
+				
+				System.out.println("Fattura inviata correttamente [" +i.getDocumentNo()+ "] ["+to_email+"]");
+				
 				i.setIsPrinted(true);
 				i.save();
 			}

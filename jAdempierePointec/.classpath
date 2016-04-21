@@ -28,6 +28,10 @@
 	<classpathentry kind="lib" path="lib/xstream-1.4.7.jar"/>
 	<classpathentry kind="lib" path="lib/jaxrpc.jar"/>
 	<classpathentry kind="lib" path="lib/xmlpull-1.1.3.1.jar"/>
-	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib/Adempiere.jar"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib/AdempiereCLib.jar"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib/CompiereJasperReqs.jar"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib/customization.jar"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib/patches.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
