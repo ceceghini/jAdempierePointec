@@ -2,10 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/Adempiere.jar" sourcepath="/home/cesare/Scaricati/patch-standardita"/>
-	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/AdempiereCLib.jar"/>
-	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/CompiereJasperReqs.jar"/>
-	<classpathentry kind="lib" path="/home/cesare/opt/Adempiere/lib/customization.jar"/>
 	<classpathentry kind="lib" path="lib/activation.jar"/>
 	<classpathentry kind="lib" path="lib/axis-ant.jar"/>
 	<classpathentry kind="lib" path="lib/axis-schema.jar"/>
@@ -32,5 +28,6 @@
 	<classpathentry kind="lib" path="lib/xstream-1.4.7.jar"/>
 	<classpathentry kind="lib" path="lib/jaxrpc.jar"/>
 	<classpathentry kind="lib" path="lib/xmlpull-1.1.3.1.jar"/>
+	<classpathentry kind="lib" path="/home/ceceghini/opt/Adempiere/lib"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
