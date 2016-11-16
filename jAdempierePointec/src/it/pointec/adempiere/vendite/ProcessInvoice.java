@@ -129,7 +129,7 @@ public class ProcessInvoice {
 	 * @param baseUrl	sito internet
 	 * @throws IOException
 	 */
-	public void downloadFromMagento(String baseURl) throws IOException {
+	public void downloadFromMagento(String baseURl) throws IOException, InterruptedException {
 		
 		// Download del file
 		String url;

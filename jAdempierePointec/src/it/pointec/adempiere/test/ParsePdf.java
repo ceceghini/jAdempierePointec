@@ -2,7 +2,6 @@ package it.pointec.adempiere.test;
 
 import java.io.File;
 
-import it.pointec.adempiere.util.Extractor;
 import it.pointec.adempiere.util.Util;
 
 public class ParsePdf {

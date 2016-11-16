@@ -2,15 +2,10 @@ package it.pointec.adempiere.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -40,15 +35,15 @@ public class Util {
 	 * @param file	File di destinazione
 	 * @throws IOException
 	 */
-	public static void downloadFile(String url, String file) throws IOException {
+	public static void downloadFile(String url, String file) throws InterruptedException, IOException {
 		
 		/*URL website = new URL(url);
 		ReadableByteChannel rbc = Channels.newChannel(website.openStream());
 		FileOutputStream fos = new FileOutputStream(file);
 	    fos.getChannel().transferFrom(rbc, 0, 1 << 24);
 	    fos.close();*/
-		
-		URL website = new URL(url);
+				
+		/*URL website = new URL(url);
 		URLConnection c = website.openConnection();
 		c.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0");
 		InputStream i = c.getInputStream();
@@ -58,7 +53,12 @@ public class Util {
 		while ((read = i.read(bytes)) != -1) {
 			o.write(bytes, 0, read);
 		}
-		o.close();
+		o.close();*/
+		
+		String command = "wget " + url + " -O " + file;
+		
+		Process p = Runtime.getRuntime().exec(command);
+		p.waitFor()	;
 		
 		
 	}

@@ -4,11 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.pdfbox.exceptions.COSVisitorException;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDStream;
 
 import com.lowagie.text.DocumentException;
-import com.lowagie.text.pdf.PdfReader;
 
 import it.pointec.adempiere.util.Extractor;
 import it.pointec.adempiere.util.Util;
