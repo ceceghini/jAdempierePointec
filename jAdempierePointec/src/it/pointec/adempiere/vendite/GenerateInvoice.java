@@ -20,8 +20,7 @@ public class GenerateInvoice {
 		p.generateInvoice("doc_type_id_invoice");
 		p.generateInvoice("doc_type_id_creditmemo");
 		p.generateInvoice("doc_type_id_invoice_std");
-		p.generateInvoice("doc_type_id_creditmemo_std");
-		
+				
 		Util.printErrorAndExit();
 
 	}

@@ -189,7 +189,7 @@ public class ProcessBPartner {
 			//sql = new StringBuffer ("delete from  I_BPARTNER a "
 			//		+ "where exists (select value from I_BPARTNER b where a.value = b.value and a.i_bpartner_id <> b.i_bpartner_id) "
 			//		+ "  and taxid is null");	
-			DB.executeUpdateEx(sql.toString(), null);
+			//DB.executeUpdateEx(sql.toString(), null);
 			
 			//sql = new StringBuffer("update i_bpartner i "
 			//		+ "set i.value = (select value from C_BPARTNER b where i.name = b.name) "

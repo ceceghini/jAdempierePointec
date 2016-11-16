@@ -15,6 +15,7 @@ import java.sql.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.pdfparser.PDFParser;
@@ -174,6 +175,13 @@ public class Util {
 		return d;
 	}
 	
+	public static Calendar getCalendar(String s, String format) throws ParseException {
+		DateFormat dateFormat = new SimpleDateFormat(format);
+		Calendar cal  = Calendar.getInstance();
+		cal.setTime(dateFormat.parse(s));
+		return cal;
+	}
+	
 	/**
 	 * Conversione di un pdf in testo
 	 * @param f	File pdf da convertire
@@ -250,6 +258,23 @@ public class Util {
 		
 	}
 	
+	public static boolean moveFile(File f_source, File f_dest) {
+		
+		Util.debug("Util.moveFile ["+f_source.getAbsolutePath()+"] ["+f_dest.getAbsolutePath()+"]");
+		
+		if (!f_source.exists()) {
+			Util.addError("File non esistente [" + f_source.getAbsolutePath() + "]\n");
+			return false;
+		}
+		
+		File f_parent = new File(f_dest.getParent());
+		if (!f_parent.exists())
+			f_parent.mkdir();
+		
+		return f_source.renameTo(f_dest);
+		
+	}
+	
 	/**
 	 * Spostamento di un file
 	 * @param source			Percorso sorgente
@@ -260,60 +285,12 @@ public class Util {
 	 */
 	public static boolean moveFile(String source, String dest, String nomeFileSource, String nomeFileDest) {
 		
-		Util.debug("Util.moveFile ["+source+"] ["+dest+"] ["+nomeFileSource+"] ["+nomeFileDest+"]");
-		
-		// Verifico se il file sorgente esiste
 		File f_source = new File(source + "/" + nomeFileSource);
-		if (!f_source.exists()) {
-			Util.addError("File non esistente [" + source + "/" + nomeFileSource + "]\n");
-			return false;
-		}
-		
-		// Verifico se la directory di destinazione esiste altrimenti la creo
-		String[] a = nomeFileDest.split("/");
-		File d;
-		if (a.length>1) {
-			d = new File(dest + "/" + a[0]);
-		}
-		else {
-			d = new File(dest);
-		}
-		
-		if (!d.exists())
-			d.mkdir();
-		
-		// Spostamento vero e proprio del file
-		
 		File f_dest = new File(dest + "/" + nomeFileDest);
 		
-		//System.out.println(f_source.getAbsolutePath() + " >> " + f_dest.getAbsolutePath());
-		return f_source.renameTo(f_dest);
+		return moveFile(f_source, f_dest);
 		
 	}
-	
-	/**
-	 * Recupero percorso fatture sulla base del doctype_id
-	 * @param c_doctype_id
-	 * @return
-	 */
-	/*public static String doctypeidToPath(int c_doctype_id, String type) {
-		
-		return Ini.getString(type) + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
-		
-		//return Ini.getString("fatture_" + Integer.toString(c_doctype_id));
-	}*/
-	
-	/*public static String getPath(String type) {
-		
-		return Ini.getString(type) + "/";
-		
-	}
-	
-	public static String getPathByType(int c_doctype_id) {
-		
-		return Ini.getString("fatture_" + Integer.toString(c_doctype_id));
-		
-	}*/
 	
 	public static String getDaElaborare(int c_doctype_id) {
 		
@@ -324,33 +301,62 @@ public class Util {
 	
 	public static String getDaElaborare(String type) {
 		
-		return Ini.getString("daelaborare") + "/" + Ini.getString(type);
+		String path = Ini.getString("daelaborare") + "/" + Ini.getString(type);
+		
+		return path;
 		
 	}
 	
 	public static String getDaArchiviare(int c_doctype_id) {
 		
-		return Ini.getString("daarchiviare") + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		String path = Ini.getString("daarchiviare") + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		
+		checkPath(path);
+		
+		return path;
 		
 	}
 	
 	public static String getArchivio(int c_doctype_id, String year) {
 		
-		return getArchivio("fatture_" + Integer.toString(c_doctype_id), year);
-		//return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
+		String path = Ini.getString("archivio")+ "/" + year + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id));
 		
+		checkPath(path);
+		
+		return path;
+				
 	}
 	
 	public static String getArchivio(String type, String year) {
 		
-		return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString(type);
+		String path = Ini.getString("archivio")+ "/" + year + "/" + type;
+		
+		checkPath(path);
+		
+		return path;
 		
 	}
 	
-	public static String getDaStampare(int c_doctype_id, String year) {
+	/*public static String getDaStampare(int c_doctype_id, String year) {
 		
 		return Ini.getString("archivio")+ "/" + year + "/" + Ini.getString("fatture_" + Integer.toString(c_doctype_id)) + " PER STAMPA";
 		
+	}*/
+	
+	public static String getDaConservare(String year, String month) {
+		
+		String path = Ini.getString("conservazione")+ "/" + year + "/fatture/" + month;
+		
+		checkPath(path);	
+		
+		return path;
+		
+	}
+	
+	private static void checkPath(String path) {
+		File f = new File(path);
+		if (!f.exists())
+			f.mkdirs();
 	}
 	
 	
@@ -398,6 +404,15 @@ public class Util {
 	public static void debug(String str) {
 		if (_debug)
 			System.out.println(str);
+	}
+	
+	public static String toString(Calendar cal) {
+		
+		java.util.Date date = cal.getTime();             
+		SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+		return format1.format(date);            
+		
+		
 	}
 	
 }

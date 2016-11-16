@@ -1,8 +1,5 @@
 package it.pointec.adempiere.archive;
 
-import java.awt.Color;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,12 +8,6 @@ import org.compiere.model.MBPartner;
 import org.compiere.model.MInvoice;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
-
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.pdf.BaseFont;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfStamper;
 
 import it.pointec.adempiere.Adempiere;
 import it.pointec.adempiere.util.Ini;
@@ -109,106 +100,75 @@ public class Archive {
 		
 		try {
 			
-			PreparedStatement stmt = DB.prepareStatement("select max (p.ENDDATE) from c_calendar c join c_year y on c.C_CALENDAR_ID = y.C_CALENDAR_ID join c_period p on y.C_YEAR_ID = p.C_YEAR_ID join C_PERIODCONTROL pc on p.C_PERIOD_ID = pc.C_PERIOD_ID where c.AD_CLIENT_ID = ? and pc.PERIODSTATUS = 'C' and p.STARTDATE < sysdate", null);
-			stmt.setInt(1, Ini.getInt("ad_client_id"));
+			//PreparedStatement stmt = DB.prepareStatement("select max (p.ENDDATE) from c_calendar c join c_year y on c.C_CALENDAR_ID = y.C_CALENDAR_ID join c_period p on y.C_YEAR_ID = p.C_YEAR_ID join C_PERIODCONTROL pc on p.C_PERIOD_ID = pc.C_PERIOD_ID where c.AD_CLIENT_ID = ? and pc.PERIODSTATUS = 'C' and p.STARTDATE < sysdate", null);
+			//stmt.setInt(1, Ini.getInt("ad_client_id"));
 						
-			ResultSet rs = stmt.executeQuery();
+			//ResultSet rs = stmt.executeQuery();
 			
-			rs.next();
+			//rs.next();
 			
-			Date date = rs.getDate(1);
+			Date date = Util.getDate(Ini.getString("date_iva"), "d/M/y");
+									
+			//rs.close();
+			//stmt.close();
 			
-			rs.close();
-			stmt.close();
-			
-			stmt = DB.prepareStatement("select i.c_invoice_id from c_invoice i join C_DOCTYPE d on i.C_DOCTYPE_ID = d.C_DOCTYPE_ID where i.DOCSTATUS = 'CO' and i.ad_client_id = ? and i.ad_org_id = ? and i.description like 'daarchiviare%' and i.vatledgerdate <= ? and d.DOCBASETYPE in ('API', 'APC') and i.vatledgerno is not null", null);
+			PreparedStatement stmt = DB.prepareStatement("select i.c_invoice_id from c_invoice i join C_DOCTYPE d on i.C_DOCTYPE_ID = d.C_DOCTYPE_ID where i.DOCSTATUS = 'CO' and i.ad_client_id = ? and i.ad_org_id = ? and i.description like 'daarchiviare%' and i.vatledgerdate <= ? and d.DOCBASETYPE in ('API', 'APC') and i.vatledgerno is not null", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt("ad_org_id"));
 			stmt.setDate(3, date);
 			
 			//System.out.println(date.toString());
 						
-			rs = stmt.executeQuery();
+			ResultSet rs = stmt.executeQuery();
 			
-			String source;
-			String dest;
-			MInvoice i;
-			MBPartner b;
-			String nomeFileSource;
-			String nomeFileDest;
-			String description;
-						
 			while (rs.next()) {
-			
-				i = MInvoice.get(Env.getCtx(), rs.getInt(1));
-				b = MBPartner.get(Env.getCtx(), i.getC_BPartner_ID());
 				
-				nomeFileSource = i.getDescription().split("\n")[1];
-				
-				source = Util.getDaArchiviare(i.getC_DocType_ID());
-				dest = Util.getArchivio(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
-				
-				//nomeFileDest = i.get_ValueAsString("vatledgerdate").substring(0, 4)+"/";
-				nomeFileDest = "[" + i.get_ValueAsString("vatledgerno")+"]-";
-				nomeFileDest += "[" + i.get_ValueAsString("vatledgerdate").substring(0, 10)+"]---";
-				nomeFileDest += "[" + b.get_ValueAsString("name").replaceAll("[^a-zA-Z0-9]", "_") + "]-";
-				nomeFileDest += "[" + i.get_ValueAsString("dateinvoiced").substring(0, 10)+"]-";
-				nomeFileDest += "[" + i.get_ValueAsString("poreference").replaceAll("[^a-zA-Z0-9]", "_")+"]";
-				nomeFileDest += ".pdf";
-				
-				//System.out.println(source);
-				//System.out.println(dest);
-				
-				// Verifica se il file pdf è criptato
-				PdfReader pdf = new PdfReader(source + "/" + nomeFileSource);
-				
-				if (pdf.isEncrypted()) {
-					Util.moveFile(source, "/tmp", nomeFileSource, "tmp.pdf");
-					String c = "qpdf --decrypt /tmp/tmp.pdf /tmp/decrypt.pdf";
-					Util.debug(c);
-					Runtime.getRuntime().exec(c);
-					Util.moveFile("/tmp", source, "decrypt.pdf", nomeFileSource);
-					pdf = new PdfReader(source + "/" + nomeFileSource);
-				}
-				
-				if (!pdf.isEncrypted()) {
-									
-					if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
-						
-						description = "archiviati\n"+nomeFileDest;
-						
-						i.setDescription(description);
-						
-						System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
-						
-						// Timbro
-						source = dest;
-						dest = Util.getDaStampare(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
-						
-						createPdf(source+"/"+nomeFileDest, dest+"/"+nomeFileDest, i);
-						
-						Util.printErrorAndExit();
-					
-						i.save();
-						
-						
-						
-					}
-					else {
-						
-						Util.addError("File [" + nomeFileSource + "] NON SPOSTATO\n");
-						
-					}
-				}
-				else {
-					Util.addError("File [" + nomeFileSource + "] NON SPOSTATO [CRIPTATO]\n");
-				}
+				archiveInvoice(rs.getInt(1));
 								
 			}			
 			
 		}
 		catch (Exception e) {
 			Util.addError(e);
+		}
+		
+	}
+	
+	public static void archiveInvoice(int idInvoice) {
+		
+		MInvoice i = MInvoice.get(Env.getCtx(), idInvoice);
+		MBPartner b = MBPartner.get(Env.getCtx(), i.getC_BPartner_ID());
+		
+		String nomeFileSource = i.getDescription().split("\n")[1];
+		
+		String source = Util.getDaArchiviare(i.getC_DocType_ID());
+		String dest = Util.getArchivio(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
+		
+		//nomeFileDest = i.get_ValueAsString("vatledgerdate").substring(0, 4)+"/";
+		String nomeFileDest = "[" + i.get_ValueAsString("vatledgerno")+"]-";
+		nomeFileDest += "[" + i.get_ValueAsString("vatledgerdate").substring(0, 10)+"]---";
+		nomeFileDest += "[" + b.get_ValueAsString("name").replaceAll("[^a-zA-Z0-9]", "_") + "]-";
+		nomeFileDest += "[" + i.get_ValueAsString("dateinvoiced").substring(0, 10)+"]-";
+		nomeFileDest += "[" + i.get_ValueAsString("poreference").replaceAll("[^a-zA-Z0-9]", "_")+"]";
+		nomeFileDest += ".pdf";
+		
+		if (Util.moveFile(source, dest, nomeFileSource, nomeFileDest)) {
+			
+			String description = "archiviati\n"+nomeFileDest;
+			
+			i.setDescription(description);
+			
+			System.out.println(i.getDocumentNo() + " nuovo stato [archiviato]");
+			
+			i.save();
+			
+			
+			
+		}
+		else {
+			
+			Util.addError("File [" + nomeFileSource + "] NON SPOSTATO\n");
+			
 		}
 		
 	}
@@ -241,34 +201,6 @@ public class Archive {
 		catch (Exception e) {
 			Util.addError(e);
 		}
-		
-	}
-	
-	public static void createPdf (String from, String to, MInvoice i) throws DocumentException, IOException {
-		
-		BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
-		
-		PdfReader pdfReader = new PdfReader(from);
-        
-		PdfStamper pdfStamper = new PdfStamper(pdfReader,new FileOutputStream(to));
-        
-        // Testo
-		PdfContentByte content = pdfStamper.getOverContent(1);
-        content.beginText();
-        content.setFontAndSize(bf, 15);
-        content.setColorFill(Color.RED);
-        content.setColorStroke(Color.RED);
-        content.setLineWidth(1);
-        content.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_FILL_STROKE);
-        content.showTextAligned(PdfContentByte.ALIGN_LEFT
-        		,"### Data protocollo: " +
-        		 i.get_ValueAsString("vatledgerdate").substring(0, 10) + " - " +
-        		 "N. protocollo: " +
-        		 i.get_ValueAsString("vatledgerno") + " ###"
-        		,10,10,0);
-        content.endText();
-        
-        pdfStamper.close();
 		
 	}
 	

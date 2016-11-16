@@ -106,8 +106,6 @@ public class Paypal extends I_BankStatement implements I_Source {
 		SimpleDateFormat formatter=new SimpleDateFormat("yyyy-MM-dd");
 		Util.debug("Elaborazione paypal data: " + formatter.format(d.getTime()) + "]");
 		
-		I_BankStatement_Line line;
-						
 		CallerServices caller = new CallerServices();
 		APIProfile profile = ProfileFactory.createSignatureAPIProfile();
 		
@@ -138,31 +136,7 @@ public class Paypal extends I_BankStatement implements I_Source {
 			for (int i = 0; i < ts.length; i++)
 			{
 				
-				if (
-						ts[i].getStatus().compareTo("Canceled") !=0 &&
-						ts[i].getType().compareTo("Fee Reversal") !=0 &&
-						ts[i].getType().compareTo("Bill") !=0 &&
-						ts[i].getStatus().compareTo("Removed") !=0 && 
-						ts[i].getType().compareTo("Authorization") !=0 &&
-						ts[i].getType().compareTo("Temporary Hold") != 0 &&
-						ts[i].getGrossAmount() != null
-					) {
-					
-					Util.debug("Elaborazione riga [" + ts[i].getTransactionID() + "]");
-				
-					line = new I_BankStatement_Line();
-					
-					line.set_date(new Date(ts[i].getTimestamp().getTimeInMillis()));
-					line.set_trxid(ts[i].getTransactionID());
-					line.set_gross_amount(new BigDecimal(ts[i].getGrossAmount().get_value()));
-					line.set_charge_amount(new BigDecimal(ts[i].getFeeAmount().get_value()));
-					line.set_description(ts[i].getPayerDisplayName() + " - " + ts[i].getStatus() + " - " + ts[i].getType() + " - " + ts[i].getPayer());
-					
-					super.insertLineIntoAdempiere(line);
-					
-					Util.debug("Fine elaborazione riga [" + ts[i].getTransactionID() + "]");
-					
-				}
+				insertPaypal(ts[i]);
 				
 				
 			}
@@ -173,6 +147,33 @@ public class Paypal extends I_BankStatement implements I_Source {
 		}
 		
 		Util.debug("Fine elaborazione paypal data: " + formatter.format(d.getTime()) + "]");
+		
+	}
+	
+	private void insertPaypal(PaymentTransactionSearchResultType ts) throws SQLException {
+		
+		if (!(ts.getStatus().compareTo("Completed")==0 || ts.getStatus().compareTo("Cleared")==0 || ts.getStatus().compareTo("Refunded")==0))
+			return;
+		
+		if (!(ts.getType().compareTo("Payment")==0 || ts.getType().compareTo("Recurring Payment")==0 || ts.getType().compareTo("Refound")==0 || ts.getType().compareTo("Purchase")==0)) 
+			return;
+		
+		if (ts.getGrossAmount()==null)
+			return;
+		
+		Util.debug("Elaborazione riga [" + ts.getTransactionID() + "]");
+		
+		I_BankStatement_Line line = new I_BankStatement_Line();
+		
+		line.set_date(new Date(ts.getTimestamp().getTimeInMillis()));
+		line.set_trxid(ts.getTransactionID());
+		line.set_gross_amount(new BigDecimal(ts.getGrossAmount().get_value()));
+		line.set_charge_amount(new BigDecimal(ts.getFeeAmount().get_value()));
+		line.set_description(ts.getPayerDisplayName() + " - " + ts.getStatus() + " - " + ts.getType() + " - " + ts.getPayer());
+		
+		super.insertLineIntoAdempiere(line);
+		
+		Util.debug("Fine elaborazione riga [" + ts.getTransactionID() + "]");
 		
 	}
 

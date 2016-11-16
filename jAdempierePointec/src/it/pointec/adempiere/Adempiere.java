@@ -25,6 +25,8 @@ public class Adempiere {
 		CLogMgt.setLevel(org.compiere.util.Ini.getProperty(org.compiere.util.Ini.P_TRACELEVEL));
 		org.compiere.Adempiere.startupEnvironment(false);
 		
+		Env.setContext( Env.getCtx(), "#AD_Language", "it_IT" );
+		
 		Env.getCtx().setProperty("#AD_Client_ID", Integer.toString(Ini.getInt("ad_client_id")));
 		Env.getCtx().setProperty("#AD_Org_ID", Integer.toString(Ini.getInt("ad_org_id")));
 		

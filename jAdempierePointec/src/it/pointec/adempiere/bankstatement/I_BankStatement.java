@@ -227,15 +227,10 @@ public class I_BankStatement {
 			return;
 		
 		File f_source = new File(source);
-
-		if (!f_source.exists())
-			return;
+		
+		String dest = Util.getArchivio("estratti conto", _year) + "/" + _source.get_subpath();
 				
-		String dest = Util.getArchivio("bankstatement", _year) + "/" + _source.get_subpath() + "/" + _bs_name + "." + _source.get_extension();
-		
-		File f_dest = new File(dest);
-		
-		f_source.renameTo(f_dest);
+		Util.moveFile(f_source.getParent(), dest, f_source.getName(), _bs_name + "." + _source.get_extension());
 		
 	}
 	

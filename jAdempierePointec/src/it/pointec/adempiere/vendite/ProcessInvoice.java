@@ -108,9 +108,15 @@ public class ProcessInvoice {
 		//String last = "000003680";
 		
 		try {
+			String[] sites = Ini.getString("site").split("#");
+			
+			for (String site : sites) {
+				downloadFromMagento(site);
+			}
+			
 			//downloadFromMagento("http://www.lucebrillante.it");
 			//downloadFromMagento("http://www.elodie.it");
-			downloadFromMagento("http://www.stampaperfetta.it");
+			//downloadFromMagento("http://www.stampaperfetta.it");
 		}
 		catch (Exception e) {
 			Util.addError(e);

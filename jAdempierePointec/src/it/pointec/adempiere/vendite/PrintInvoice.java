@@ -152,7 +152,7 @@ public class PrintInvoice {
 		
 		try {
 			
-			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice i where i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and to_char(vatledgerdate, 'yyyy') = ?", null);
+			PreparedStatement stmt = DB.prepareStatement("select c_invoice_id from c_invoice i where i.docstatus = 'CO' and i.ad_client_id = ? and i.C_DOCTYPE_ID = ? and to_char(vatledgerdate, 'yyyy') = ?", null);
 			stmt.setInt(1, Ini.getInt("ad_client_id"));
 			stmt.setInt(2, Ini.getInt(type));
 			stmt.setString(3, year);
@@ -247,7 +247,7 @@ public class PrintInvoice {
 		
 	}
 	
-	private void GenerateInvoice(MInvoice i) {
+	public void GenerateInvoice(MInvoice i) {
 		
 		File f_source = createPdf(i);
 		
@@ -259,10 +259,16 @@ public class PrintInvoice {
 		String dest = Util.getArchivio(i.getC_DocType_ID(), i.get_ValueAsString("VATLEDGERDATE").substring(0,  4));
 		String nomeFileDest = i.getDocumentNo() + ".pdf";
 		
-		File f_dest = new File(dest + "/" + nomeFileDest);
+		File f_dest = new File(dest);
+		if (!f_dest.exists())
+			f_dest.mkdirs();
+		
+		f_dest = new File(dest + "/" + nomeFileDest);
 		
 		if (!f_dest.exists() || override) {
-			f_source.renameTo(f_dest);
+			
+			Util.moveFile(f_source, f_dest);
+			
 			System.out.println("Fattura ["+ i.getDocumentNo() +"] generata. ["+dest+"]");
 		}
 		
