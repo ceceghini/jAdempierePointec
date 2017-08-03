@@ -3,7 +3,6 @@ package it.pointec.adempiere;
 import java.sql.SQLException;
 
 import it.pointec.adempiere.util.Ini;
-import it.pointec.adempiere.util.Util;
 
 import org.compiere.util.CLogMgt;
 import org.compiere.util.DB;
@@ -15,8 +14,6 @@ public class Adempiere {
 		
 		// Caricamento property
 		Ini.loadPropery();
-		
-		Util.setDebug();
 		
 		// Inizializzazione adempiere
 		org.compiere.util.Ini.setClient (false);		//	init logging in Ini
@@ -35,7 +32,5 @@ public class Adempiere {
 	protected void finalize () throws SQLException {
 		DB.closeTarget();
 	}
-	
-	
 	
 }

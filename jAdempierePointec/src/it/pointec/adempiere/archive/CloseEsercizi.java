@@ -10,7 +10,7 @@ public class CloseEsercizi {
 		a.inizializza();
 		
 		Esercizi e = new Esercizi();
-		e.CloseYear(2015);
+		e.CloseYear(2016);
 
 	}
 

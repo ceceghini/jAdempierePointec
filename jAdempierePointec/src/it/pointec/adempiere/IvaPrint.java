@@ -1,4 +1,4 @@
-package it.pointec.adempiere.archive;
+package it.pointec.adempiere;
 
 import java.util.Calendar;
 import java.io.File;
@@ -16,18 +16,16 @@ import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 
-import it.pointec.adempiere.Adempiere;
-
 import it.pointec.adempiere.util.Ini;
 import it.pointec.adempiere.util.Util;
 
-public class Iva {
+public class IvaPrint {
 
 	//private MPrintFormat format;
 	//private MProcess processLiquidazione;
 	//private MClient client;
 	
-	private Iva() {
+	private IvaPrint() {
 		
 		//client = MClient.get(Env.getCtx());
 		//processLiquidazione = MProcess.get (Env.getCtx(), 1000102);
@@ -40,9 +38,11 @@ public class Iva {
 		Adempiere a = new Adempiere();
 		a.inizializza();
 		
-		Iva i = new Iva();
+		IvaPrint i = new IvaPrint();
 		i.generateLiquidazione();
 		i.generateRegistriIva();
+		
+		Util.printErrorAndExit();
 		
 
 	}
@@ -71,7 +71,7 @@ public class Iva {
 		
 		name_vat = name_vat.replace(' ', '-');
 		
-		int year = Ini.getInt("generate_invoice_year");
+		int year = Ini.getInt("iva_print_year");
 		
 		Calendar cFrom = Calendar.getInstance();
 		Calendar cTo = Calendar.getInstance();
@@ -178,7 +178,7 @@ public class Iva {
 	
 	private void generateLiquidazione() {
 		
-		int year = Ini.getInt("generate_invoice_year");
+		int year = Ini.getInt("iva_print_year");
 		
 		Calendar cFrom = Calendar.getInstance();
 		Calendar cTo = Calendar.getInstance();
